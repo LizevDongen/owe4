@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../owe4a/week3/.idea/demo.iml" filepath="$PROJECT_DIR$/../owe4a/week3/.idea/demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/owe4a_basis.iml" filepath="$PROJECT_DIR$/.idea/owe4a_basis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../owe4a/.idea/owe4a_flaskApps.iml" filepath="$PROJECT_DIR$/../owe4a/.idea/owe4a_flaskApps.iml" />
+    </modules>
+  </component>
+</project>
