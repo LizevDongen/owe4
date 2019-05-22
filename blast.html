@@ -34,14 +34,39 @@
                title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
             <a href="#" class="w3-bar-item w3-button w3-padding-large">HOME</a>
             <a href={{ url_for ('database') }}
-               class="w3-bar-item w3-button w3-padding-large w3-hide-small">Database</a>
-            <a href= {{ url_for ('grafieken') }}
-               class="w3-bar-item w3-button w3-padding-large w3-hide-small">Grafieken</a>
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">Database</a>
+            <a href={{ url_for ('grafieken') }}
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">Grafieken</a>
             <a href={{ url_for ('blast') }}
-               class="w3-bar-item w3-button w3-padding-large w3-hide-small">BLAST</a>
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">BLAST</a>
         </div>
     </div>
 </middle>
+
+<b>Champignon database</b><br>
+Klik op de champignons om grafieken over de database te zien.<br>
+<a href="blast.html"><img
+        src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
+        width="140" height="140"></a>
+
+
+<!-- Hier komt BLAST code -->
+<br>Hier kan een sequentie worden gegeven om te blasten. Geef de sequentie in en druk op de knop.
+<br>Het is niet hoofdlettergevoelig en het maakt gebruik van de volgende blasten:
+<br>Nucleotide sequentie:
+<br>Eiwit sequentie
+<br>RNA sequenties worden eerst vertaald naar DNA.
+
+<form method="post">
+    <input type="text" name="Sequentie">
+    <button type="button"></button>
+</form>
+
+</body>
+</html>
 
 <b>Champignon database</b><br>
 Klik op de champignons om grafieken over de database te zien.<br>
