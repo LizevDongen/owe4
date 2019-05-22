@@ -113,23 +113,36 @@ def resultaat_database():
 @app.route('/grafieken')
 def grafieken():
     return render_template('grafieken.html')
-
 @app.route('/blast', methods=['get', 'post'])
 def blast():
+    """Van hier uit wordt de blast geregeld.
+    Het haalt de sequentie op uit de template en brengt het naar functie is_dna
+    om te kijken wat voor functie het is. Vervolgens brengt het de sequentie 
+    naar de juiste BLAST en transcribeert het de sequentie als er RNA gegeven
+    is.
+    :return: de HTML pagina van BLAST.
+    """
     sequentie = request.form.get("Sequentie")
     print(sequentie)
+    blastdictionary = None
     if not sequentie == None:
-        type = is_dna(sequentie)
+        sequentie = sequentie.strip()
+        type = is_dna(sequentie)  # Deze functie kijkt wat voor type het is
+        print(type)
         if type == "DNA":
-            BlastN(sequentie)
+            print("Ik ben in DNA, moet niet")
+            blastdictionary = BlastN(sequentie)  # Dit is BLASTn
         elif type == "RNA":
-            sequentie == "DIT WORDT GETRANSCRIBEERT"
-            BlastN(sequentie)
+            print("Ik ben in RNA, gaat fout")
+            sequentie == back_transcribe(sequentie)  # Dit transcribeert het 
+            blastdictionary = BlastN(sequentie)  # Dit is ook BLASTn
         elif type == "eiwit":
-            BlastX(sequentie)
+            blastdictionary = BlastX(sequentie)  # Dit is BLASTx
         elif type == "Fout":
+            blastdictionary = None
             print("Dit is geen goede sequentie")
-    return render_template('blast.html')
+    return render_template('blast.html',
+                           data=blastdictionary)  # Dit is de site
 
 
 def is_dna(sequentie):
@@ -139,21 +152,127 @@ def is_dna(sequentie):
     :return: een string met het type van de sequentie
     """
     print(sequentie.upper())
-    if re.search(r"[ATGC]", sequentie.upper()):
+    if len(re.findall(r"[ATCG]", sequentie)) == len(sequentie):
         return "DNA"
-    elif re.search(r"[AUGC]", sequentie.upper()):
+    elif not back_transcribe(sequentie) == sequentie:
         return "RNA"
-    elif sequentie.upper() in ["ARNDBCEQZGHILKMFPSTWYV"]:
+    elif len(
+            re.findall(r"[ARNDBC EQZGHILKMFPSTWYV]", sequentie.upper())) == len(
+            sequentie):
         return "eiwit"
     else:
         return "Fout"
 
 
 def BlastN(sequentie):
-    print("HIER KOMT BLASTN")
+    """Dit is BLASTn. Het blast als gewoonlijk met als score matrix BLOSUM62
+    en als database nr.
+    :param sequentie: de sequentie die gegeven is
+    :return: 
+    """
+    dictionaryn = {}  # Deze dictionary wordt gevuld met de lijsten met info
+    descriptionlist_blastn = []
+    scientific_name_list_blastn = []
+    score_list = []
+    e_value_list = []
+    pid_list = []
+    query_cover_list = []
+    accession_code_list = []
+
+    result_handle = NCBIWWW.qblast("blastn", "nr", sequentie,
+                                   matrix_name="BLOSUM62",
+                                   hitlist_size=10)
+    blast_record = NCBIXML.read(result_handle)
+    for alignment in blast_record.alignments:
+        for hsp in alignment.hsps:
+            print("****Alignment****")
+            print("sequence:", alignment.title)
+            print("length:", alignment.length)
+            print("e value:", hsp.expect)
+            print('query cover', (hsp.align_length / len(sequentie)) * 100)
+            print('identity', (hsp.identities / hsp.align_length) * 100)
+            print('score', hsp.score)
+            print(hsp.query[0:75] + "...")
+            print(hsp.match[0:75] + "...")
+            print(hsp.sbjct[0:75] + "...")
+
+            descriptionlist_blastn.append(alignment.title)
+            scientific_name_list_blastn.append(
+                re.search("([A-Z][a-z]*) ([a-z]+)", alignment.title).group())
+            score_list.append(hsp.score)
+            e_value_list.append(hsp.expect)
+            pid_list.append((hsp.identities / hsp.align_length) * 100)
+            query_cover_list.append(hsp.align_length / len(sequentie) * 100)
+            accession_code_list.append((
+                re.search('[A-Z].*\|',
+                          alignment.title).group()).replace(
+                '|', ''))
+
+    key = sequentie
+    print(key)
+    if not key in dictionaryn:
+        dictionaryn[key] = descriptionlist_blastn, scientific_name_list_blastn, \
+                           accession_code_list, query_cover_list, e_value_list, score_list, pid_list
+    else:
+        print("Deze sequentie is al geblast")
+
+    return dictionaryn
+
 
 def BlastX(sequentie):
-    print("HIER KOMT BLASTX")
+    """Dit is blastx. Het wordt als gewoonlijk gebruikt en maakt gebruik van
+    matrix BLOSUM62 en database nr.
+    :param sequentie: de meegegeven sequentie
+    :return: 
+    """
+    dictionaryn = {}  # Deze dictionary wordt gevuld met de lijsten met info
+    descriptionlist_blastn = []
+    scientific_name_list_blastn = []
+    score_list = []
+    e_value_list = []
+    pid_list = []
+    query_cover_list = []
+    accession_code_list = []
+
+    result_handle = NCBIWWW.qblast("blastp", "nr", sequentie,
+                                   matrix_name="BLOSUM62",
+                                   hitlist_size=10)
+    blast_record = NCBIXML.read(result_handle)
+    for alignment in blast_record.alignments:
+        for hsp in alignment.hsps:
+            print("****Alignment****")
+            print("sequence:", alignment.title)
+            print("length:", alignment.length)
+            print("e value:", hsp.expect)
+            print('query cover', (hsp.align_length / len(sequentie)) * 100)
+            print('identity', (hsp.identities / hsp.align_length) * 100)
+            print('score', hsp.score)
+            print(hsp.query[0:75] + "...")
+            print(hsp.match[0:75] + "...")
+            print(hsp.sbjct[0:75] + "...")
+
+            descriptionlist_blastn.append(alignment.title)
+            scientific_name_list_blastn.append(
+                re.search("([A-Z][a-z]*) ([a-z]+)", alignment.title).group())
+            score_list.append(hsp.score)
+            e_value_list.append(hsp.expect)
+            pid_list.append((hsp.identities / hsp.align_length) * 100)
+            query_cover_list.append(hsp.align_length / len(sequentie) * 100)
+            accession_code_list.append((
+                re.search('[A-Z].*\|',
+                          alignment.title).group()).replace(
+                '|', ''))
+
+    key = sequentie
+    print(key)
+    if not key in dictionaryn:
+        dictionaryn[key] = descriptionlist_blastn, scientific_name_list_blastn, \
+                           accession_code_list, query_cover_list, e_value_list, score_list, pid_list
+    else:
+        print("Deze sequentie is al geblast")
+
+    return dictionaryn
+
 
 
 if __name__ == '__main__':
