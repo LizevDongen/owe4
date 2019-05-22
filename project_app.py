@@ -1,6 +1,10 @@
 from flask import Flask, request, render_template
 import mysql.connector
+from Bio.Seq import Seq, transcribe, translate, back_transcribe
+from Bio.Blast import NCBIXML, NCBIWWW
+import re
 from tabulate import tabulate
+
 
 app = Flask(__name__)
 
