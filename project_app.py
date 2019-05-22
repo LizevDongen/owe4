@@ -114,9 +114,46 @@ def resultaat_database():
 def grafieken():
     return render_template('grafieken.html')
 
-@app.route('/blast')
+@app.route('/blast', methods=['get', 'post'])
 def blast():
+    sequentie = request.form.get("Sequentie")
+    print(sequentie)
+    if not sequentie == None:
+        type = is_dna(sequentie)
+        if type == "DNA":
+            BlastN(sequentie)
+        elif type == "RNA":
+            sequentie == "DIT WORDT GETRANSCRIBEERT"
+            BlastN(sequentie)
+        elif type == "eiwit":
+            BlastX(sequentie)
+        elif type == "Fout":
+            print("Dit is geen goede sequentie")
     return render_template('blast.html')
+
+
+def is_dna(sequentie):
+    """Dit wordt aangeroepen door de BLAST functie er kijkt wat het type is
+    van de sequentie.
+    :param sequentie: de ingevoerde sequentie
+    :return: een string met het type van de sequentie
+    """
+    print(sequentie.upper())
+    if re.search(r"[ATGC]", sequentie.upper()):
+        return "DNA"
+    elif re.search(r"[AUGC]", sequentie.upper()):
+        return "RNA"
+    elif sequentie.upper() in ["ARNDBCEQZGHILKMFPSTWYV"]:
+        return "eiwit"
+    else:
+        return "Fout"
+
+
+def BlastN(sequentie):
+    print("HIER KOMT BLASTN")
+
+def BlastX(sequentie):
+    print("HIER KOMT BLASTX")
 
 
 if __name__ == '__main__':
