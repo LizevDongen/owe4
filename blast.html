@@ -54,26 +54,45 @@ Klik op de champignons om grafieken over de database te zien.<br>
 
 
 <!-- Hier komt BLAST code -->
-<br>Hier kan een sequentie worden gegeven om te blasten. Geef de sequentie in en druk op de knop.
-<br>Het is niet hoofdlettergevoelig en het maakt gebruik van de volgende blasten:
-<br>Nucleotide sequentie:
-<br>Eiwit sequentie
-<br>RNA sequenties worden eerst vertaald naar DNA.
+<br>Hier kan een sequentie worden gegeven om te blasten. Geef de sequentie in
+en druk op de knop.
+<br>Het is niet hoofdlettergevoelig en het maakt gebruik van de volgende
+blasten:
+<br>Nucleotide sequentie: BLASTn
+<br>Eiwit sequentie: BLASTp
+<br>RNA sequenties worden eerst vertaald naar DNA en dan als een nucleotide
+sequentie gebruikt.
+<br>De database waar tegen wordt geblast is nr en de score matrix is BLOSUM62
 
 <form method="post">
     <input type="text" name="Sequentie">
-    <button type="button"></button>
+    <button type="button" value="BLAST"></button>
 </form>
 
-</body>
-</html>
+<br>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Organisme</th>
+        <th>Omschrijving eiwit</th>
+        <th>Accessie code</th>
+        <th>Query covery</th>
+        <th>E-value</th>
+        <th>Percentage identity</th>
+        <th>taxonomie ID</th>
+    </tr>
+    {% if  data != None %}
+        {% for key in data %}
+            {% for item in data[key] %}
+                <tr>
+                    <td>{{ item }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
 
-<b>Champignon database</b><br>
-Klik op de champignons om grafieken over de database te zien.<br>
-<a href="grafieken.html"><img
-        src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
-        width="140" height="140">
-kpikipkikp
+
+</table>
 
 </body>
 </html>
