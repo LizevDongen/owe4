@@ -36,13 +36,14 @@ def database_optie1():
                         '<b>Percentage identity</b>',
                         '<b>Taxonomie tax ID</b>']]
     woord = request.form.get('woord')
+    categorie = request.form.get('categorie')
     cursor.execute(
         """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
             Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
             Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
             join Onderzoeks_sequenties on 
             (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
-            where Naam_organisme like '%{}%'order by E_value Asc;""".format(woord))
+            where {} like '%{}%'order by E_value Asc;""".format(categorie, woord))
     rows = cursor.fetchall()
     for x in rows:
         if x != None:
@@ -61,71 +62,6 @@ def database_optie1():
                     alle_resultaten.append(lijst_x)
     return tabulate(alle_resultaten, tablefmt='html')
 
-
-def database_optie2():
-    alle_resultaten = [['<b>Sequentie ID</b>', '<b>Naam organisme</b>',
-                        '<b>Omschrijving eiwit</b>', '<b>Accessie code</b>',
-                        '<b>Query cover resultaat</b>', '<b>E value</b>',
-                        '<b>Percentage identity</b>',
-                        '<b>Taxonomie tax ID</b>']]
-    woord = request.form.get('woord')
-    cursor.execute(
-        """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
-            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
-            join Onderzoeks_sequenties on 
-            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
-            where Omschrijving_eiwit like '%{}%'order by E_value Asc;""".format(woord))
-    rows = cursor.fetchall()
-    for x in rows:
-        if x != None:
-            lijst_x = list(x)
-            for n, i in enumerate(lijst_x):
-                if i == x[0]:
-                    lijst_x[n] = '<div class ="tooltip" > {} '.format(x[0]) \
-                                 + '<span class ="tooltiptext" > Dit is header: <br>{} </span> </div>'.format(
-                        x[8])
-                    lijst_x[n].strip('\'')
-                    del lijst_x[8]
-                elif i == x[3]:
-                    lijst_x[
-                        n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(
-                        x[3]) + x[3]
-                    alle_resultaten.append(lijst_x)
-    return tabulate(alle_resultaten, tablefmt='html')
-
-
-
-def database_optie3():
-    alle_resultaten = [['<b>Sequentie ID</b>', '<b>Naam organisme</b>',
-                        '<b>Omschrijving eiwit</b>', '<b>Accessie code</b>',
-                        '<b>Query cover resultaat</b>', '<b>E value</b>',
-                        '<b>Percentage identity</b>',
-                        '<b>Taxonomie tax ID</b>']]
-    woord = request.form.get('woord')
-    cursor.execute(
-        """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
-            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
-            join Onderzoeks_sequenties on 
-            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
-            where Accessie_code like '%{}%'order by E_value Asc;""".format(woord))
-    rows = cursor.fetchall()
-    for x in rows:
-        if x != None:
-            lijst_x = list(x)
-            for n, i in enumerate(lijst_x):
-                if i == x[0]:
-                    lijst_x[n] = '<div class ="tooltip" > {} '.format(x[0])\
-                                 + '<span class ="tooltiptext" > Dit is header: <br>{} </span> </div>'.format(x[8])
-                    lijst_x[n].strip('\'')
-                    del lijst_x[8]
-                elif i == x[3]:
-                    lijst_x[
-                        n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(
-                        x[3]) + x[3]
-            alle_resultaten.append(lijst_x)
-    return tabulate(alle_resultaten, tablefmt='html') + '</body> <br>' + '</html>'
 
 def grafiek_maker():
     cursor = conn.cursor()
@@ -152,16 +88,8 @@ def database():
 
 @app.route('/resultaat', methods=['get', 'post'])
 def resultaat_database():
-    categorie = request.form.get('categorie')
-    if categorie == 'Naam_organisme':
-        resultaat = database_optie1()
-        return render_template('database.html') + resultaat
-    elif categorie == 'Omschrijving_eiwit':
-        resultaat = database_optie2()
-        return render_template('database.html') + resultaat
-    elif categorie == 'Accessie_code':
-        resultaat = database_optie3()
-        return render_template('database.html') + resultaat
+    resultaat = database_optie1()
+    return render_template('database.html') + resultaat
 
 
 @app.route('/grafieken')
