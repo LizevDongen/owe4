@@ -4,6 +4,8 @@ from Bio.Seq import Seq, transcribe, translate, back_transcribe
 from Bio.Blast import NCBIXML, NCBIWWW
 import re
 from tabulate import tabulate
+import matplotlib.pyplot as plt
+
 
 
 app = Flask(__name__)
