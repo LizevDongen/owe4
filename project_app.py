@@ -99,18 +99,22 @@ def grafieken():
     return render_template('grafieken.html')
 
 @app.route('/blast', methods=['get', 'post'])
-d@app.route('/blast', methods=['get', 'post'])
 def blast():
     """Van hier uit wordt de blast geregeld.
     Het haalt de sequentie op uit de template en brengt het naar functie is_dna
-    om te kijken wat voor functie het is. Vervolgens brengt het de sequentie 
+    om te kijken wat voor functie het is. Vervolgens brengt het de sequentie
     naar de juiste BLAST en transcribeert het de sequentie als er RNA gegeven
     is.
     :return: de HTML pagina van BLAST.
     """
-    type = None
-    print(request.form.getlist('blast'))
-    print(type)
+    blastlijst = request.form.getlist('blast')
+    if blastlijst == []:
+        output = "vink een optie aan"
+    elif len(blastlijst) > 1:
+        output = "vink maar 1 optie aan!"
+    elif len(blastlijst) == 1:
+        for item in blastlijst:
+            output = "de aangevinkte optie is" + str(item)
 
     sequentie = request.form.get("Sequentie")  # Dit haalt de sequentie op
     #print(sequentie)
@@ -118,7 +122,7 @@ def blast():
         sequentie)  # Dit maakt output van de input
 
     return render_template('blast.html',
-                           data=blastdictionary)  # Dit is de site
+                           data=blastdictionary, aangevinkt=output)  # Dit is de site
 
 
 def sequentiedoorstuurder(sequentie):
