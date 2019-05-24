@@ -108,25 +108,34 @@ def blast():
     """
     sequentie = request.form.get("Sequentie")
     print(sequentie)
+    blastdictionary = sequentiedoorstuurder(sequentie)
+
+    return render_template('blast.html',
+                           data=blastdictionary)  # Dit is de site
+
+
+def sequentiedoorstuurder(sequentie):
+    """Deze functie zorgt dat de sequentie goed wordt verwerkt en naar de BLAST
+    wordt gestuurd.
+    :param sequentie: de opgegeven sequentie
+    :return: een dictionary met de resultaten van BLAST
+    """
     blastdictionary = None
     if not sequentie == None:
         sequentie = sequentie.strip()
         type = is_dna(sequentie)  # Deze functie kijkt wat voor type het is
         print(type)
         if type == "DNA":
-            print("Ik ben in DNA, moet niet")
             blastdictionary = BlastN(sequentie)  # Dit is BLASTn
         elif type == "RNA":
-            print("Ik ben in RNA, gaat fout")
-            sequentie == back_transcribe(sequentie)  # Dit transcribeert het 
+            sequentie == back_transcribe(sequentie)  # Dit transcribeert het
             blastdictionary = BlastN(sequentie)  # Dit is ook BLASTn
         elif type == "eiwit":
             blastdictionary = BlastX(sequentie)  # Dit is BLASTx
         elif type == "Fout":
             blastdictionary = None
             print("Dit is geen goede sequentie")
-    return render_template('blast.html',
-                           data=blastdictionary)  # Dit is de site
+    return blastdictionary
 
 
 def is_dna(sequentie):
@@ -135,14 +144,15 @@ def is_dna(sequentie):
     :param sequentie: de ingevoerde sequentie
     :return: een string met het type van de sequentie
     """
-    print(sequentie.upper())
+    sequentie = sequentie.upper()
     if len(re.findall(r"[ATCG]", sequentie)) == len(sequentie):
         return "DNA"
-    elif not back_transcribe(sequentie) == sequentie:
+    elif len(re.findall(r"[AUCG]", sequentie)) == len(sequentie):
         return "RNA"
     elif len(
-            re.findall(r"[ARNDBC EQZGHILKMFPSTWYV]", sequentie.upper())) == len(
-            sequentie):
+            re.findall(r"[ARNDBC EQZGHILKMFPSTWYV]",
+                       sequentie)) == len(
+        sequentie):
         return "eiwit"
     else:
         return "Fout"
@@ -256,7 +266,6 @@ def BlastX(sequentie):
         print("Deze sequentie is al geblast")
 
     return dictionaryn
-
 
 
 if __name__ == '__main__':
