@@ -52,15 +52,23 @@ Klik op de champignons om grafieken over de database te zien.<br>
         src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
         width="140" height="140"></a>
 
-<form action="">
+<form method="post">
+    <br> <b>Let op dat alleen sequenties van BLASTx in de database mogen!</b>
     <br>
-    <input type="checkbox" value="false" width="10">      BLASTn
+    <input type="checkbox" name="database_opslaan"> Wil je de resultaten
+    opslaan?
+</form>
+
+
+<form method="post">
     <br>
-    <input type="checkbox" value="false" width="10">      BLASTx
+    <input type="checkbox" value="blastn" name="blast"> BLASTn
     <br>
-    <input type="checkbox" value="false" width="10">      tBLASTx
+    <input type="checkbox" value="blastx" name="blast"> BLASTx
     <br>
-    <input type="checkbox" value="false" width="10">      BLASTp
+    <input type="checkbox" value="tblastx" name="blast"> tBLASTx
+    <br>
+    <input type="checkbox" value="blastp" name="blast"> BLASTp
     <br>
     <input type="submit" value="Submit">
 </form>
@@ -81,6 +89,7 @@ sequentie gebruikt.
     <input type="text" name="Sequentie">
     <input type="submit" value="BLAST">
 </form>
+
 
 
 <br>
