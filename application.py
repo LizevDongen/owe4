@@ -78,8 +78,8 @@ def grafiek_maker():
     plt.title('Hoeveelheid organisme')
     plt.xlabel('Organisme')
     plt.ylabel('Aantal organisme')
-    file = open("static/top_3_organisme.png", "w")
-    fig = plt.savefig(file)
+    fig = plt.savefig("static/top_3_organisme.png")
+
 
 
 @app.route('/database')
