@@ -1,0 +1,120 @@
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <!--<link rel="stylesheet" href="https://unpkg.com/picnic"> -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: "Lato", sans-serif
+        }
+        .mySlides {
+            display: none
+        }
+    </style>
+    <title> 1. Database</title>
+
+
+</head>
+<body background="white">
+
+<!-- Navbar -->
+<middle>
+    <div class="w3-top">
+        <div class="w3-bar w3-black w3-card">
+            <a class="w3-bar-item w3-button w3-padding-large w3-hide-medium w3-hide-large w3-right"
+               href="javascript:void(0)" onclick="myFunction()"
+               title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+            <a href="#" class="w3-bar-item w3-button w3-padding-large">HOME</a>
+            <a href={{ url_for ('database') }}
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">Database</a>
+            <a href={{ url_for ('grafieken') }}
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">Grafieken</a>
+            <a href={{ url_for ('blast') }}
+                       class="w3-bar-item w3-button w3-padding-large
+               w3-hide-small">BLAST</a>
+        </div>
+    </div>
+</middle>
+
+<b>Champignon database</b><br>
+Klik op de champignons om grafieken over de database te zien.<br>
+<a href="blast.html"><img
+        src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
+        width="140" height="140"></a>
+
+<form method="post">
+    <br> <b>Let op dat alleen sequenties van BLASTx in de database mogen!</b>
+    <br>
+    <input type="checkbox" name="database_opslaan"> Wil je de resultaten
+    opslaan?
+</form>
+
+
+<form method="post">
+    <br>
+    <input type="checkbox" value="blastn" name="blast"> BLASTn
+    <br>
+    <input type="checkbox" value="blastx" name="blast"> BLASTx
+    <br>
+    <input type="checkbox" value="tblastx" name="blast"> tBLASTx
+    <br>
+    <input type="checkbox" value="blastp" name="blast"> BLASTp
+    <br>
+    <input type="submit" value="Submit">
+</form>
+{{ aangevinkt }} <br><br>
+
+<!-- Hier komt BLAST code -->
+<br>Hier kan een sequentie worden gegeven om te blasten. Geef de sequentie in
+en druk op de knop.
+<br>Het is niet hoofdlettergevoelig en het maakt gebruik van de volgende
+blasten:
+<br>Nucleotide sequentie: BLASTn
+<br>Eiwit sequentie: BLASTp
+<br>RNA sequenties worden eerst vertaald naar DNA en dan als een nucleotide
+sequentie gebruikt.
+<br>De database waar tegen wordt geblast is nr en de score matrix is BLOSUM62
+
+<form method="post">
+    <input type="text" name="Sequentie">
+    <input type="submit" value="BLAST">
+</form>
+
+
+
+<br>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Organisme</th>
+        <th>Omschrijving eiwit</th>
+        <th>Accessie code</th>
+        <th>Query covery</th>
+        <th>E-value</th>
+        <th>Percentage identity</th>
+        <th>taxonomie ID</th>
+    </tr>
+    {% if  data != None %}
+        {% for key in data %}
+            {% for item in data[key] %}
+                <tr>
+                    <td>{{ item }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+
+</table>
+
+</body>
+</html>
