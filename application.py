@@ -80,6 +80,7 @@ def grafieken():
     :return: de HTML pagina
     """
     top_3_organismen_grafiek()
+    top_3_hoogste_scores()
     return render_template('grafieken.html')
 
 
@@ -104,6 +105,26 @@ def top_3_organismen_grafiek():
     plt.ylabel('Aantal organisme')
     plt.savefig("static/top_3_organisme.png")
 
+        
+def top_3_hoogste_scores():
+    cursor = conn.cursor()
+    cursor.execute('select Naam_organisme, E_value from Resultaten_Blast order by E_value desc limit 5')
+    rows = cursor.fetchall()
+    organisme = []
+    aantal_organisme = []
+    for x in rows:
+        organisme.append(x[0])
+        aantal_organisme.append(x[1])
+    width = 0.5
+    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue', 'g', 'r'))
+    plt.title('De hoogste E-values per 28-05-2019')
+    plt.xlabel('Organisme')
+    plt.ylabel('Aantal organisme')
+    plt.xticks()
+    plt.text(5, 5, "kip")
+    plt.savefig("static/top_5_E_value.png")
+        
+        
 @app.route('/blast', methods=['get', 'post'])
 def blast():
     """Van hier uit wordt de blast geregeld.
