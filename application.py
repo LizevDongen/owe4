@@ -134,8 +134,78 @@ def top_3_hoogste_scores():
     plt.savefig('templates/top_5_Evalue.png')
         
         
-@app.route('/blast', methods=['get', 'post'])
+@app.route('/blast')
 def blast():
+    return render_template('blast.html')
+
+def sequentie_id_ophaler():
+    """ Deze functie haalt het hoogste sequentie ID op om deze vervolgens door te geven,
+    zodat als er een resultaat wordt toegevoegd aan de database, deze een nieuw uniek nummer krijgt
+    """
+    conn = mysql.connector.connect(
+        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+        # maakt connectie met de database
+        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+        db="rohtv", password='pwd123')
+    cursor = conn.cursor()
+    cursor.execute('select max(Sequentie_ID) from Onderzoeks_sequenties;')
+    rows = cursor.fetchone()
+    for x in rows:
+        return x
+
+
+def BLASTx():
+    """ Deze functie BLASTx, blast met het programma blastx. Het heeft 2 global lijsten om
+    vervolgens deze te vullen met de resultaten van de blast. De lijsten zijn global omdat deze
+    door gegeven kunnen worden zonder de hele functie (met daarbij het blasten) opnieuw uit te voeren
+    """
+    global onderzoeks_sequentie
+    global resultaten_blasten
+    onderzoeks_sequentie = []
+    resultaten_blasten = []
+    seqID = sequentie_id_ophaler()
+    sequentie = request.form.get("Sequentie")
+    blastx = NCBIWWW.qblast(program='blastx', database='nr',
+                            sequence=str(sequentie), format_type='XML',
+                            hitlist_size=1)
+    for record in NCBIXML.parse(blastx):
+        if record.alignments:
+            for align in record.alignments:
+                for hsp in align.hsps:
+                    resultaten_blasten.append(seqID+1)
+                    resultaten_blasten.append(re.search("([A-Z][a-z]*) "
+                                                        "([a-z]+)",align.title)
+                                              .group())
+                    resultaten_blasten.append(align.title)
+                    resultaten_blasten.append(re.search('\|[A-Z]+.*?[0-9]\|',
+                                                        align.title).group()
+                                              .replace('|', ''))
+                    resultaten_blasten.append(((hsp.align_length /
+                                                len(sequentie)) * 100))
+                    resultaten_blasten.append(hsp.expect)
+                    resultaten_blasten.append(((hsp.identities /
+                                                hsp.align_length) * 100))
+                    onderzoeks_sequentie.append(seqID+1)
+                    onderzoeks_sequentie.append(sequentie)
+
+
+def blast_opslaan_database():
+    """" Deze functie pakt de global lijsten en vult daarmee de database
+    """
+    conn = mysql.connector.connect(
+        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+        # maakt connectie met de database
+        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+        db="rohtv", password='pwd123')
+    cursor = conn.cursor()
+    cursor.execute('insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, Header) values {};'.format(tuple(onderzoeks_sequentie)))
+    conn.commit()
+    cursor.execute('insert into Resultaten_Blast(Sequentie_ID, Naam_organisme, Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, Percentage_Identity) values {};'.format(tuple(resultaten_blasten)))
+    conn.commit()
+
+
+@app.route('/blastresultaten', methods=['get', 'post'])
+def blastresultaten():
     """Van hier uit wordt de blast geregeld.
     Het haalt de sequentie op uit de template en brengt het naar functie is_dna
     om te kijken wat voor functie het is. Vervolgens brengt het de sequentie
@@ -143,46 +213,54 @@ def blast():
     is.
     :return: de HTML pagina van BLAST.
     """
-    blastlijst = request.form.getlist('blast')
-    if blastlijst == []:
-        output = "vink een optie aan"
-    elif len(blastlijst) > 1:
-        output = "vink maar 1 optie aan!"
-    elif len(blastlijst) == 1:
-        for item in blastlijst:
-            output = "de aangevinkte optie is" + str(item)
+    seq = request.form['Sequentie'].upper()
+    x = is_dna(seq)
+    if x != "Fout":
+        if request.form['BLAST'] == 'BLASTn':
+            resultaten_blastn = Blast_overig('blastn', seq)
+            return \
+                render_template('BLAST_resultaten_zonder_opslaan.html') +\
+                resultaten_blastn
+        elif request.form['BLAST'] == 'BLASTx':
+            BLASTx()
+            return \
+                render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                '<hr>' + '<b>Resultaten BLASTx </b> <br>' + '<br>' + \
+                'Accessiecode: ' + str(resultaten_blasten[3]) + '<br>' + \
+                'Beschrijving: ' + str(resultaten_blasten[2]) + '<br>' \
+                + 'E-value: ' + str(resultaten_blasten[5]) + \
+                '<br>' + 'Query cover: ' + str(resultaten_blasten[4]) + \
+                '<br>' + 'Percentage identity: ' + \
+                str(resultaten_blasten[6]) + '<br>' + \
+                render_template('opslaan_database_knoppen.html')
+        elif request.form['BLAST'] == 'BLASTp':
+            resultaten_blastp = Blast_overig('blastp', seq)
+            return \
+                render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                resultaten_blastp
+        elif request.form['BLAST'] == 'tBLASTx':
+            resultaten_tblastx = Blast_overig('tblastx', seq)
+            return \
+                render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                resultaten_tblastx
+    else:
+        return render_template('blast.html') + \
+               '&emsp;<b><br> Dit is geen geldige sequentie, ' \
+               'probeer opnieuw!</b>'
 
-    sequentie = request.form.get("Sequentie")  # Dit haalt de sequentie op
-    #print(sequentie)
-    blastdictionary = sequentiedoorstuurder(
-        sequentie)  # Dit maakt output van de input
 
-    return render_template('blast.html',
-                           data=blastdictionary, aangevinkt=output)  # Dit is de site
-
-
-def sequentiedoorstuurder(sequentie):
-    """Deze functie zorgt dat de sequentie goed wordt verwerkt en naar de BLAST
-    wordt gestuurd.
-    :param sequentie: de opgegeven sequentie
-    :return: een dictionary met de resultaten van BLAST
-    """
-    blastdictionary = None
-    if not sequentie == None:
-        sequentie = sequentie.strip()
-        type = is_dna(sequentie)  # Deze functie kijkt wat voor type het is
-        print(type)
-        if type == "DNA":
-            blastdictionary = BlastN(sequentie)  # Dit is BLASTn
-        elif type == "RNA":
-            sequentie == back_transcribe(sequentie)  # Dit transcribeert het
-            blastdictionary = BlastN(sequentie)  # Dit is ook BLASTn
-        elif type == "eiwit":
-            blastdictionary = BlastX(sequentie)  # Dit is BLASTx
-        elif type == "Fout":
-            blastdictionary = None
-            print("Dit is geen goede sequentie")
-    return blastdictionary
+@app.route('/opslaan_database', methods=['get', 'post'])
+def opslaan_database():
+    if request.form['checked'] == 'opslaan':
+        onderzoeks_sequentie.append(request.form['Header'])
+        blast_opslaan_database()
+        return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+               '<article class="card"> <header> <h3>De resultaten zijn ' \
+               'succesvol opgeslagen!</h3> </header> </article> '
+    else:
+        return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+               '<article class="card"> <header> <h3>Dan niet! bedankt voor ' \
+               'het gebruikmaken van ons programma!</h3> </header> </article> '
 
 
 def is_dna(sequentie):
@@ -205,114 +283,38 @@ def is_dna(sequentie):
         return "Fout"
 
 
-def BlastN(sequentie):
-    """Dit is BLASTn. Het blast als gewoonlijk met als score matrix BLOSUM62
+def Blast_overig(blast, sequentie):
+    """Dit is BLAST_overig. Het blast als gewoonlijk met als score matrix BLOSUM62
     en als database nr.
-    :param sequentie: de sequentie die gegeven is
-    :return: 
+    :param sequentie: de sequentie die gegeven is 
+    :param blast: het blast programma wat meegegeven is
+    :return:
     """
-    dictionaryn = {}  # Deze dictionary wordt gevuld met de lijsten met info
-    descriptionlist_blastn = []
-    scientific_name_list_blastn = []
-    score_list = []
-    e_value_list = []
-    pid_list = []
-    query_cover_list = []
-    accession_code_list = []
-
-    result_handle = NCBIWWW.qblast("blastn", "nr", sequentie,
+    result_blast = ''
+    result_handle = NCBIWWW.qblast(blast, "nr", sequentie,
                                    matrix_name="BLOSUM62",
-                                   hitlist_size=10)
+                                   hitlist_size=1)
     blast_record = NCBIXML.read(result_handle)
     for alignment in blast_record.alignments:
         for hsp in alignment.hsps:
-            print("****Alignment****")
-            print("sequence:", alignment.title)
-            print("length:", alignment.length)
-            print("e value:", hsp.expect)
-            print('query cover', (hsp.align_length / len(sequentie)) * 100)
-            print('identity', (hsp.identities / hsp.align_length) * 100)
-            print('score', hsp.score)
-            print(hsp.query[0:75] + "...")
-            print(hsp.match[0:75] + "...")
-            print(hsp.sbjct[0:75] + "...")
+            result_blast += "<b>****Alignment****</b> <br>"
+            result_blast += ("Beschrijving: " + alignment.title
+                             + '<br>')
+            result_blast += ('Accessiecode: ' +
+                             (re.search('\|[A-Z]+.*?[0-9]\|',
+                                        alignment.title).group()
+                              .replace('|', '')) + '<br>')
+            result_blast += ("Length: " + str(alignment.length)
+                             + '<br>')
+            result_blast += ("E-value: " + str(hsp.expect) + '<br>')
+            result_blast += ('Query cover: ' + str((hsp.align_length /
+                                                          len(sequentie))
+                                                          * 100) + '<br>')
+            result_blast += ('Identity: ' + str((hsp.identities /
+                                                        hsp.align_length)
+                                                       * 100) + '<br>')
 
-            descriptionlist_blastn.append(alignment.title)
-            scientific_name_list_blastn.append(
-                re.search("([A-Z][a-z]*) ([a-z]+)", alignment.title).group())
-            score_list.append(hsp.score)
-            e_value_list.append(hsp.expect)
-            pid_list.append((hsp.identities / hsp.align_length) * 100)
-            query_cover_list.append(hsp.align_length / len(sequentie) * 100)
-            accession_code_list.append((
-                re.search('[A-Z].*\|',
-                          alignment.title).group()).replace(
-                '|', ''))
-
-    key = sequentie
-    print(key)
-    if not key in dictionaryn:
-        dictionaryn[key] = descriptionlist_blastn, scientific_name_list_blastn, \
-                           accession_code_list, query_cover_list, e_value_list, score_list, pid_list
-    else:
-        print("Deze sequentie is al geblast")
-
-    return dictionaryn
-
-
-def BlastX(sequentie):
-    """Dit is blastx. Het wordt als gewoonlijk gebruikt en maakt gebruik van
-    matrix BLOSUM62 en database nr.
-    :param sequentie: de meegegeven sequentie
-    :return: 
-    """
-    dictionaryn = {}  # Deze dictionary wordt gevuld met de lijsten met info
-    descriptionlist_blastn = []
-    scientific_name_list_blastn = []
-    score_list = []
-    e_value_list = []
-    pid_list = []
-    query_cover_list = []
-    accession_code_list = []
-
-    result_handle = NCBIWWW.qblast("blastp", "nr", sequentie,
-                                   matrix_name="BLOSUM62",
-                                   hitlist_size=10)
-    blast_record = NCBIXML.read(result_handle)
-    for alignment in blast_record.alignments:
-        for hsp in alignment.hsps:
-            print("****Alignment****")
-            print("sequence:", alignment.title)
-            print("length:", alignment.length)
-            print("e value:", hsp.expect)
-            print('query cover', (hsp.align_length / len(sequentie)) * 100)
-            print('identity', (hsp.identities / hsp.align_length) * 100)
-            print('score', hsp.score)
-            print(hsp.query[0:75] + "...")
-            print(hsp.match[0:75] + "...")
-            print(hsp.sbjct[0:75] + "...")
-
-            descriptionlist_blastn.append(alignment.title)
-            scientific_name_list_blastn.append(
-                re.search("([A-Z][a-z]*) ([a-z]+)", alignment.title).group())
-            score_list.append(hsp.score)
-            e_value_list.append(hsp.expect)
-            pid_list.append((hsp.identities / hsp.align_length) * 100)
-            query_cover_list.append(hsp.align_length / len(sequentie) * 100)
-            accession_code_list.append((
-                re.search('[A-Z].*\|',
-                          alignment.title).group()).replace(
-                '|', ''))
-
-    key = sequentie
-    print(key)
-    if not key in dictionaryn:
-        dictionaryn[key] = descriptionlist_blastn, scientific_name_list_blastn, \
-                           accession_code_list, query_cover_list, e_value_list, score_list, pid_list
-    else:
-        print("Deze sequentie is al geblast")
-
-    return dictionaryn
+    return result_blast
 
 
 if __name__ == '__main__':
