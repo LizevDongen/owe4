@@ -17,6 +17,47 @@
         .mySlides {
             display: none
         }
+
+a.tooltip {
+    position: relative;
+    top: 50px;
+    left: 50px;
+}
+
+a.tooltip:hover span {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+a.tooltip span {
+    {#padding: 10px;#}
+    top: 20px;
+    left: -750px;
+    min-width: 750px;
+    max-width: 1000px;
+    background-color: #000000;
+    color: #FFFFFF;
+    height: auto;
+    border-radius: 5px;
+    opacity: 0;
+    position:absolute;
+    visibility: hidden;
+    word-wrap: break-word;
+    -webkit-transition: all 0.5s;
+       -moz-transition: all 0.5s;
+        -ms-transition: all 0.5s;
+         -o-transition: all 0.5s;
+            transition: all 0.5s;
+}
+        .container {
+  position: relative;
+}
+#child1 {
+  position: absolute;
+  top: 50px;
+  left: 1570px;
+}
     </style>
     <title> 1. Database</title>
 
@@ -49,72 +90,45 @@
 Klik op de champignons om grafieken over de database te zien.<br>
 
 
-<form method="post">
-    <br> <b>Let op dat alleen sequenties van BLASTx in de database mogen!</b>
-    <br>
-    <input type="checkbox" name="database_opslaan"> Wil je de resultaten
-    opslaan?
-</form>
-
-
-<form method="post">
-    <br>
-    <input type="checkbox" value="blastn" name="blast"> BLASTn
-    <br>
-    <input type="checkbox" value="blastx" name="blast"> BLASTx
-    <br>
-    <input type="checkbox" value="tblastx" name="blast"> tBLASTx
-    <br>
-    <input type="checkbox" value="blastp" name="blast"> BLASTp
-    <br>
-    <input type="submit" value="Submit">
-</form>
-{{ aangevinkt }} <br><br>
-
 <!-- Hier komt BLAST code -->
-<br>Hier kan een sequentie worden gegeven om te blasten. Geef de sequentie in
+<br>&emsp;Hieronder kan een sequentie worden gegeven om te blasten. Geef de sequentie in
 en druk op de knop.
-<br>Het is niet hoofdlettergevoelig en het maakt gebruik van de volgende
-blasten:
-<br>Nucleotide sequentie: BLASTn
-<br>Eiwit sequentie: BLASTp
-<br>RNA sequenties worden eerst vertaald naar DNA en dan als een nucleotide
-sequentie gebruikt.
-<br>De database waar tegen wordt geblast is nr en de score matrix is BLOSUM62
 
-<form method="post">
+<script>
+function myFunction() {
+  alert("Let op! Het kan even duren want je gaat nu blasten");
+}
+</script>
+
+<a class="tooltip" id="child1">
+    <img src="https://png.pngtree.com/svg/20170516/fbefc0bf9c.svg" width="25" height="25">
+  <span><u>BLASTp</u>: vergelijkt een aminozuursequentie met een aminozuursequentiedatabase. <br>
+<u>BLASTn:</u> vergelijkt een nucleïnezuursequentie met een nucleïnezuursequentiedatabase.<br>
+<u>BLASTx:</u> Vergelijkt een nucleïnezuursequentie met een eiwitsequentiedatabase.<br>
+<u>tBLASTx:</u> vergelijkt een in alle frames vertaalde nucleïnezuursequentie met een nucleïnezuursequentiedatabase.<br>
+  De database waar tegen wordt geblast is nr en de score matrix is <u>BLOSUM62</u>.</span>
+</a>
+<form method="post" action="/blastresultaten">
+<label>
+  <input type='radio' checked name="BLAST" value="BLASTx">&emsp;U heeft de volgende keuzes om mee te blasten:&emsp;
+  <span class="checkable">BLASTx</span>&emsp;
+</label>
+<label >
+  <input type='radio' name="BLAST" value="BLASTn">
+  <span  class="checkable" >BLASTn</span>&emsp;
+</label>
+<label >
+  <input type='radio' name="BLAST" value="tBLASTx">
+  <span class="checkable">tBLASTx</span>&emsp;
+</label>
+<label >
+  <input type='radio' name="BLAST" value="BLASTp">
+  <span class="checkable">BLASTp</span>
+</label>
+
     <input type="text" name="Sequentie">
-    <input type="submit" value="BLAST">
+    <input onclick="myFunction()"  type="submit" value="BLAST">
 </form>
-
 
 
 <br>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Organisme</th>
-        <th>Omschrijving eiwit</th>
-        <th>Accessie code</th>
-        <th>Query covery</th>
-        <th>E-value</th>
-        <th>Percentage identity</th>
-        <th>taxonomie ID</th>
-    </tr>
-    {% if  data != None %}
-        {% for key in data %}
-            {% for item in data[key] %}
-                <tr>
-                    <td>{{ item }}</td>
-                </tr>
-            {% endfor %}
-        {% endfor %}
-    {% endif %}
-
-
-</table>
-<a href="blast.html"><img
-        src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
-        width="140" height="140"></a>
-</body>
-</html>
