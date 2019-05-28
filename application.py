@@ -63,25 +63,6 @@ def database_optie1():
     return tabulate(alle_resultaten, tablefmt='html')
 
 
-def grafiek_maker():
-    cursor = conn.cursor()
-    cursor.execute(
-        'SELECT Naam_organisme, count(*) FROM Resultaten_Blast GROUP BY Naam_organisme ORDER BY count(*) DESC LIMIT 3;')
-    rows = cursor.fetchall()
-    organisme = []
-    aantal_organisme = []
-    for x in rows:
-        organisme.append(x[0])
-        aantal_organisme.append(x[1])
-    width = 0.5
-    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue'))
-    plt.title('Hoeveelheid organisme')
-    plt.xlabel('Organisme')
-    plt.ylabel('Aantal organisme')
-    fig = plt.savefig("static/top_3_organisme.png")
-
-
-
 @app.route('/database')
 def database():
     return render_template('database.html')
@@ -95,8 +76,33 @@ def resultaat_database():
 
 @app.route('/grafieken')
 def grafieken():
-    grafiek_maker()
+    """Deze functie haalt de grafieken op en plaatst ze in de template.
+    :return: de HTML pagina
+    """
+    top_3_organismen_grafiek()
     return render_template('grafieken.html')
+
+
+def top_3_organismen_grafiek():
+    """Deze functie haalt de 3 meest voorkomende organismen op uit de db en
+    maakt hier een grafiek van die het opslaat in static.
+    :return: de grafiekgrafiek
+    """
+    cursor = conn.cursor()
+    cursor.execute(
+        'SELECT Naam_organisme, count(*) FROM Resultaten_Blast WHERE Naam_organisme <> "" GROUP BY Naam_organisme ORDER BY count(*) DESC LIMIT 3;')
+    rows = cursor.fetchall()
+    organisme = []
+    aantal_organisme = []
+    for x in rows:
+        organisme.append(x[0])
+        aantal_organisme.append(x[1])
+    width = 0.5
+    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue'))
+    plt.title('Hoeveelheid organisme')
+    plt.xlabel('Organisme')
+    plt.ylabel('Aantal organisme')
+    plt.savefig("static/top_3_organisme.png")
 
 @app.route('/blast', methods=['get', 'post'])
 def blast():
