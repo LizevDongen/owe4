@@ -100,29 +100,38 @@ def top_3_organismen_grafiek():
         aantal_organisme.append(x[1])
     width = 0.5
     plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue'))
-    plt.title('Hoeveelheid organisme')
+    plt.title('De meest voorkomende organismen')
     plt.xlabel('Organisme')
     plt.ylabel('Aantal organisme')
+    plt.text(5, 5, "kip")
     plt.savefig("static/top_3_organisme.png")
 
-        
+
 def top_3_hoogste_scores():
     cursor = conn.cursor()
-    cursor.execute('select Naam_organisme, E_value from Resultaten_Blast order by E_value desc limit 5')
+    cursor.execute(
+        'select Naam_organisme, E_value, Percentage_Identity from Resultaten_Blast order by E_value, Percentage_Identity desc limit 10')
     rows = cursor.fetchall()
     organisme = []
     aantal_organisme = []
     for x in rows:
         organisme.append(x[0])
-        aantal_organisme.append(x[1])
-    width = 0.5
-    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue', 'g', 'r'))
-    plt.title('De hoogste E-values per 28-05-2019')
-    plt.xlabel('Organisme')
-    plt.ylabel('Aantal organisme')
-    plt.xticks()
-    plt.text(5, 5, "kip")
-    plt.savefig("static/top_5_E_value.png")
+        aantal_organisme.append(x[2])
+    explode = (0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    fig1, ax1 = plt.subplots()
+    tot = sum(aantal_organisme) / 100.0
+    autopct = lambda x: "%d" % round(x * tot)
+    plt.rc('xtick', labelsize=7)
+
+    ax1.pie(aantal_organisme, explode=explode, labels=organisme,
+            autopct=autopct,
+            shadow=True, startangle=90)
+
+    plt.title('De hoogste E-values en Percentage Identities')
+    ax1.axis('equal')
+
+    plt.tight_layout()
+    plt.savefig('templates/top_5_Evalue.png')
         
         
 @app.route('/blast', methods=['get', 'post'])
