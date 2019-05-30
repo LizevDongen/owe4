@@ -131,8 +131,8 @@ def top_3_hoogste_scores():
     ax1.axis('equal')
 
     plt.tight_layout()
-    plt.savefig('templates/top_5_Evalue.png')
-        
+    plt.savefig('static/top_5_Evalue.png')
+
         
 @app.route('/blast')
 def blast():
