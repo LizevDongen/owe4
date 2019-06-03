@@ -4,12 +4,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style>
         body {
             font-family: "Lato", sans-serif
@@ -18,7 +20,8 @@
             display: none
         }
 
-a.tooltip {
+
+ a.tooltip {
     position: relative;
     top: 50px;
     left: 50px;
@@ -59,11 +62,11 @@ a.tooltip span {
   left: 1570px;
 }
     </style>
-    <title>Database</title>
+    <title> 1. Database</title>
 
 
 </head>
-<body background="white">
+{#<body background="https://www.duurzaambedrijfsleven.nl/articleimage/12271/1000">#}
 
 <!-- Navbar -->
 <middle>
@@ -84,8 +87,12 @@ a.tooltip span {
     </div>
 </middle>
 
+
 <b>Champignon database</b><br>
 Klik op de champignons om grafieken over de database te zien.<br>
+<a href="blast.html"><img
+        src="https://media1.giphy.com/media/ZO7JobQkihqr1meNep/giphy.gif?cid=790b76115ce29622514e634e514dd784&rid=giphy.gif"
+        width="140" height="140"></a>
 
 
 <!-- Hier komt BLAST code -->
@@ -97,8 +104,7 @@ function myFunction() {
   alert("Let op! Het kan even duren want je gaat nu blasten");
 }
 </script>
-<br><br><br><br>
-    
+
 <a class="tooltip" id="child1">
     <img src="https://png.pngtree.com/svg/20170516/fbefc0bf9c.svg" width="25" height="25">
   <span><u>BLASTp</u>: vergelijkt een aminozuursequentie met een aminozuursequentiedatabase. <br>
@@ -122,8 +128,9 @@ function myFunction() {
 </label>
 <label >
   <input type='radio' name="BLAST" value="BLASTp">
-  <span class="checkable">BLASTp</span>&emsp;&emsp;&emsp;<b>(voor meer informatie, klik op het vraagteken rechtsboven)</b>
+    <span class="checkable">BLASTp</span>&emsp;&emsp;&emsp;<b>(voor meer informatie, klik op het vraagteken rechtsboven)</b>
 </label>
+
 
     <input type="text" name="Sequentie">
     <input onclick="myFunction()"  type="submit" value="BLAST">
