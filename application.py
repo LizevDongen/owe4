@@ -15,13 +15,6 @@ import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
-conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        # maakt connectie met de database
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
-cursor = conn.cursor()
-
 
 @app.route('/', methods=['get', 'post'])
 def connectie():
@@ -49,6 +42,13 @@ def database_optie1():
                         '<b>Taxonomie tax ID</b>']]
     woord = request.form.get('woord')
     categorie = request.form.get('categorie')
+    # Connectie is constant opnieuw aangeroepen omdat de 
+    # connectie met de database anders verbroken was.
+    conn = mysql.connector.connect(
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
+    cursor = conn.cursor()
     cursor.execute(
         """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
             Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
@@ -100,7 +100,13 @@ def top_3_organismen_grafiek():
     maakt hier een grafiek van die het opslaat in static.
     :return: de grafiekgrafiek
     """
-    cursor = conn.cursor()
+    # Connectie is constant opnieuw aangeroepen omdat de 
+    # connectie met de database anders verbroken was.
+    conn = mysql.connector.connect(
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
+    cursor = conn.cursor()    
     cursor.execute(
         'SELECT Naam_organisme, count(*) FROM Resultaten_Blast WHERE Naam_organisme <> "" GROUP BY Naam_organisme ORDER BY count(*) DESC LIMIT 3;')
     rows = cursor.fetchall()
@@ -119,6 +125,12 @@ def top_3_organismen_grafiek():
 
 
 def top_3_hoogste_scores():
+    # Connectie is constant opnieuw aangeroepen omdat de 
+    # connectie met de database anders verbroken was.
+    conn = mysql.connector.connect(
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute(
         'select Naam_organisme, E_value, Percentage_Identity from Resultaten_Blast order by E_value, Percentage_Identity desc limit 10')
@@ -152,11 +164,12 @@ def sequentie_id_ophaler():
     """ Deze functie haalt het hoogste sequentie ID op om deze vervolgens door te geven,
     zodat als er een resultaat wordt toegevoegd aan de database, deze een nieuw uniek nummer krijgt
     """
+    # Connectie is constant opnieuw aangeroepen omdat de 
+    # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        # maakt connectie met de database
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute('select max(Sequentie_ID) from Onderzoeks_sequenties;')
     rows = cursor.fetchone()
@@ -204,11 +217,12 @@ def blast_opslaan_database():
     """" 
     Deze functie pakt de global lijsten en vult insert deze in de database
     """
+    # Connectie is constant opnieuw aangeroepen omdat de 
+    # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        # maakt connectie met de database
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute('insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, Header) values {};'.format(tuple(onderzoeks_sequentie)))
     conn.commit()
