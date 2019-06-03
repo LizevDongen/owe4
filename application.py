@@ -1,3 +1,8 @@
+# Namen: Robert Rijksen, Lize van Dongen en Annemieke Schönthaler
+# Functie: ............
+# Datum: .............
+
+
 from flask import Flask, request, render_template
 import mysql.connector
 from Bio.Seq import Seq, transcribe, translate, back_transcribe
@@ -30,6 +35,13 @@ def connectie():
 
 
 def database_optie1():
+    """
+    Deze functie haalt met een query alle resultaten op uit de zelf gekozen
+    column om vervolgens de accessiecode doormiddel van een forloop te 
+    veranderen in een hyperlink naar de NCBI website
+    :return: de resultaten uit de mysql database, hierbij is de module 
+    tabulate gebruikt
+    """
     alle_resultaten = [['<b>Sequentie ID</b>', '<b>Naam organisme</b>',
                         '<b>Omschrijving eiwit</b>', '<b>Accessie code</b>',
                         '<b>Query cover resultaat</b>', '<b>E value</b>',
@@ -54,12 +66,10 @@ def database_optie1():
                                  + '<span class ="tooltiptext" > Dit is header: <br>{} </span> </div>'.format(
                         x[8])
                     lijst_x[n].strip('\'')
-                    del lijst_x[8]
                 elif i == x[3]:
-                    lijst_x[
-                        n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(
-                        x[3]) + x[3]
+                    lijst_x[n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
+            del lijst_x[8]
     return tabulate(alle_resultaten, tablefmt='html')
 
 
@@ -155,9 +165,10 @@ def sequentie_id_ophaler():
 
 
 def BLASTx():
-    """ Deze functie BLASTx, blast met het programma blastx. Het heeft 2 global lijsten om
+    """ 
+    Deze functie BLASTx, blast met het programma blastx. Het heeft 2 global lijsten om
     vervolgens deze te vullen met de resultaten van de blast. De lijsten zijn global omdat deze
-    door gegeven kunnen worden zonder de hele functie (met daarbij het blasten) opnieuw uit te voeren
+    doorgegeven kunnen worden zonder de hele functie (met daarbij het blasten) opnieuw uit te voeren
     """
     global onderzoeks_sequentie
     global resultaten_blasten
@@ -190,7 +201,8 @@ def BLASTx():
 
 
 def blast_opslaan_database():
-    """" Deze functie pakt de global lijsten en vult daarmee de database
+    """" 
+    Deze functie pakt de global lijsten en vult insert deze in de database
     """
     conn = mysql.connector.connect(
         host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
