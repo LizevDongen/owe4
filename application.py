@@ -74,6 +74,7 @@ def resultaat_database():
     return render_template('database.html') + resultaat
 
 
+
 @app.route('/grafieken')
 def grafieken():
     """Deze functie haalt de grafieken op en plaatst ze in de template.
@@ -103,7 +104,7 @@ def top_3_organismen_grafiek():
     plt.title('De meest voorkomende organismen')
     plt.xlabel('Organisme')
     plt.ylabel('Aantal organisme')
-    plt.text(5, 5, "kip")
+    plt.xticks(rotation=8)
     plt.savefig("static/top_3_organisme.png")
 
 
@@ -132,7 +133,6 @@ def top_3_hoogste_scores():
 
     plt.tight_layout()
     plt.savefig('static/top_5_Evalue.png')
-
         
 @app.route('/blast')
 def blast():
