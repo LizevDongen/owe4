@@ -48,13 +48,23 @@ def database_optie1():
            user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
            db="rohtv", password='pwd123')
     cursor = conn.cursor()
-    cursor.execute(
+    if len(woord) + len(categorie) == 0:
+        cursor.execute(
         """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
             Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
             Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
             join Onderzoeks_sequenties on 
             (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
-            where {} like '%{}%'order by E_value Asc;""".format(categorie, woord))
+            order by E_value Asc;""".format(categorie, woord))
+    else:
+        cursor.execute(
+        """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
+            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
+            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
+            join Onderzoeks_sequenties on 
+            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
+            where {} like '%{}%'order by E_value Asc;""".format(categorie,
+                                                                woord))
     rows = cursor.fetchall()
     for x in rows:
         if x != None:
