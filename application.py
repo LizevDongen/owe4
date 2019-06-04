@@ -38,8 +38,7 @@ def database_optie1():
     alle_resultaten = [['<b>Sequentie ID</b>', '<b>Naam organisme</b>',
                         '<b>Omschrijving eiwit</b>', '<b>Accessie code</b>',
                         '<b>Query cover resultaat</b>', '<b>E value</b>',
-                        '<b>Percentage identity</b>',
-                        '<b>Taxonomie tax ID</b>']]
+                        '<b>Percentage identity</b>']]
     woord = request.form.get('woord')
     categorie = request.form.get('categorie')
     # Connectie is constant opnieuw aangeroepen omdat de 
@@ -69,7 +68,8 @@ def database_optie1():
                 elif i == x[3]:
                     lijst_x[n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
-            del lijst_x[8]
+            del lijst_x[7]
+            del lijst_x[7]
     return tabulate(alle_resultaten, tablefmt='html')
 
 
