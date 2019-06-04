@@ -219,15 +219,26 @@ def blast_opslaan_database():
     """
     # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
-    conn = mysql.connector.connect(
-           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-           db="rohtv", password='pwd123')
-    cursor = conn.cursor()
-    cursor.execute('insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, Header) values {};'.format(tuple(onderzoeks_sequentie)))
-    conn.commit()
-    cursor.execute('insert into Resultaten_Blast(Sequentie_ID, Naam_organisme, Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, Percentage_Identity) values {};'.format(tuple(resultaten_blasten)))
-    conn.commit()
+    try:
+        conn = mysql.connector.connect(
+            host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+            # maakt connectie met de database
+            user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+            db="rohtv", password='pwd123')
+        cursor = conn.cursor()
+        cursor.execute(
+            'insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, Header) values {};'.format(
+                tuple(onderzoeks_sequentie)))
+        conn.commit()
+        cursor.execute(
+            'insert into Resultaten_Blast(Sequentie_ID, Naam_organisme, Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, Percentage_Identity) values {};'.format(
+                tuple(resultaten_blasten)))
+        conn.commit()
+        return 0
+
+    except mysql.connector.errors.IntegrityError:
+        return 1
+
 
 
 @app.route('/blastresultaten', methods=['get', 'post'])
@@ -239,40 +250,46 @@ def blastresultaten():
     is.
     :return: de HTML pagina van BLAST.
     """
-    seq = request.form['Sequentie'].upper()
-    x = is_dna(seq)
-    if x != "Fout":
-        if request.form['BLAST'] == 'BLASTn':
-            resultaten_blastn = Blast_overig('blastn', seq)
-            return \
-                render_template('BLAST_resultaten_zonder_opslaan.html') +\
-                resultaten_blastn
-        elif request.form['BLAST'] == 'BLASTx':
-            BLASTx()
-            return \
-                render_template('BLAST_resultaten_zonder_opslaan.html') + \
-                '<hr>' + '<b>Resultaten BLASTx </b> <br>' + '<br>' + \
-                'Accessiecode: ' + str(resultaten_blasten[3]) + '<br>' + \
-                'Beschrijving: ' + str(resultaten_blasten[2]) + '<br>' \
-                + 'E-value: ' + str(resultaten_blasten[5]) + \
-                '<br>' + 'Query cover: ' + str(resultaten_blasten[4]) + \
-                '<br>' + 'Percentage identity: ' + \
-                str(resultaten_blasten[6]) + '<br>' + \
-                render_template('opslaan_database_knoppen.html')
-        elif request.form['BLAST'] == 'BLASTp':
-            resultaten_blastp = Blast_overig('blastp', seq)
-            return \
-                render_template('BLAST_resultaten_zonder_opslaan.html') + \
-                resultaten_blastp
-        elif request.form['BLAST'] == 'tBLASTx':
-            resultaten_tblastx = Blast_overig('tblastx', seq)
-            return \
-                render_template('BLAST_resultaten_zonder_opslaan.html') + \
-                resultaten_tblastx
-    else:
-        return render_template('blast.html') + \
-               '&emsp;<b><br> Dit is geen geldige sequentie, ' \
-               'probeer opnieuw!</b>'
+    try:
+        seq = request.form['Sequentie'].upper()
+        x = is_dna(seq)
+        if x != "Fout":
+            if request.form['BLAST'] == 'BLASTn':
+                resultaten_blastn = Blast_overig('blastn', seq)
+                return \
+                    render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                    resultaten_blastn
+            elif request.form['BLAST'] == 'BLASTx':
+                BLASTx()
+                return \
+                    render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                    '<hr>' + '<b>Resultaten BLASTx </b> <br>' + '<br>' + \
+                    'Accessiecode: ' + str(resultaten_blasten[3]) + '<br>' + \
+                    'Beschrijving: ' + str(resultaten_blasten[2]) + '<br>' \
+                    + 'E-value: ' + str(resultaten_blasten[5]) + \
+                    '<br>' + 'Query cover: ' + str(resultaten_blasten[4]) + \
+                    '<br>' + 'Percentage identity: ' + \
+                    str(resultaten_blasten[6]) + '<br>' + \
+                    render_template('opslaan_database_knoppen.html')
+            elif request.form['BLAST'] == 'BLASTp':
+                resultaten_blastp = Blast_overig('blastp', seq)
+                return \
+                    render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                    resultaten_blastp
+            elif request.form['BLAST'] == 'tBLASTx':
+                resultaten_tblastx = Blast_overig('tblastx', seq)
+                return \
+                    render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                    resultaten_tblastx
+        else:
+            return render_template('blast.html') + \
+                   '&emsp;<b><br> Dit is geen geldige sequentie, ' \
+                   'probeer opnieuw!</b>'
+    except ValueError:
+        return render_template('blast.html') + '&emsp;<b><br> Dit is ' \
+                                               'waarschijnlijk geen ' \
+                                               'geldige sequentie voor deze ' \
+                                               'blast, probeer opnieuw!</b>'
 
 
 @app.route('/opslaan_database', methods=['get', 'post'])
