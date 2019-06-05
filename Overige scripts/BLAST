@@ -1,0 +1,129 @@
+from Bio.Blast import NCBIWWW
+from Bio.Blast import NCBIXML
+from Bio import SearchIO
+
+import pickle
+import time
+
+
+def main():
+    # Onderstaand wordt alleen bij de 1e run aangezet, om het bestand aan
+    # te maken
+    # dicty = {}  # Deze wordt later gevuld
+    # pickle.dump(dicty, open("blast", 'wb'))
+
+    # Dit bestand bevat alleen de sequenties
+    bestandsnaam = 'sequenties_100B.xlsx.txt'
+    headers, sequenties = bestandlezer(bestandsnaam)
+
+    for i in range(len(sequenties)):  # Iteratie over de sequenties
+        percentage_geblast = (i / len(sequenties)) * 100
+        print(percentage_geblast)
+
+        # Dit is om een estimatie van de nodige tijd te maken
+        start = time.time()
+
+        # Onderstaant komt het percentage waar hij is gestopt:
+        if percentage_geblast >= 0:
+            sequentie = sequenties[i]  # Huidige sequentie
+            header = headers[i]  # Huidige header
+            BLASTx(sequentie, header)
+
+        # Dit meet de tijd en berekent aan de hand van de tijd dat het kost om
+        # de vorige sequentie hoe lang het gaat duren om alles te BLASTen
+        eind = time.time()
+        print("De verlopen tijd is:", (eind - start) / 60, "minuten")
+        print("De tijd nog nodig is",
+              ((eind - start) * ((len(sequenties) - i)) / 60) / 60, "uur")
+        print('~' * 100)
+
+
+def bestandlezer(bestandsnaam):
+    """Deze functie maakt 2D lijsten van de sequenties en de headers,
+     die later worden gebruikt om een key te maken en
+     over de sequenties wordt geitereerd en geblast.
+    :return: 2D lijsten headers en sequenties
+    """
+    bestand = open(bestandsnaam, "r")
+    headers = []
+    sequenties = []
+    for line in bestand:
+        lines = line.split('\t')
+        headers.append(lines[0])
+        sequenties.append(lines[1])
+        headers.append(lines[3])
+        sequenties.append(lines[4])
+
+    return headers, sequenties
+
+
+def BLASTx(sequentie, header):
+    """Deze functie BLAST de sequenties via BLASTx. Het print de dict en het
+    schrijft de alignments weg naar een bestand m.b.v. Pickle.
+    :param sequentie: Dit is de sequentie die geblast moet worden.
+    :param header: Dit is de header van de sequentie. Deze wordt gebruikt
+    in de dict om als key te werken.
+    """
+    print('-' * 100)
+
+    dictionary = pickle.load(open('blast', 'rb'))  # ik haal de dict op
+
+    # Deze lijsten worden gevuld met de gegevens die in de database moeten.
+    descriptionlist_blastx = []
+    scientific_name_list_blastx = []
+    score_list = []
+    e_value_list = []
+    pid_list = []
+    query_cover_list = []
+    accession_code_list = []
+
+    print('*BLAST1*' * 3)  # Dit geeft aan bij welke BLAST hij is
+
+    # Dit zijn de gegevens voor het BLASTen.
+    result_handle = NCBIWWW.qblast("blastx", "nr", sequentie,
+                                   matrix_name="BLOSUM62",
+                                   hitlist_size=10)
+    # Dit leest de resultaten in
+    read = SearchIO.parse(result_handle, 'blast-xml')
+    for i in read:
+        for hit in i:
+            # De eerste lijsten worden gevuld
+            accession_code_list.append(hit.accession)
+            descriptionlist_blastx.append(hit.description)
+            e_value_list.append(hit[0].evalue)
+            pid_list.append(hit[0].ident_num)
+            try:
+                scientific_name_list_blastx.append(
+                    hit.description.split("[")[1].strip(']'))
+            except IndexError:  # Dit vangt af dat er soms maar 1 [] is
+                scientific_name = hit.description.split("[")[0].strip(']')
+                print(scientific_name)  # En controleert de output
+                print(hit.description)
+                scientific_name_list_blastx.append(scientific_name)
+
+    print('*BLAST2*' * 3)
+
+    # Dit is de 2e BLAST, omdat ik hier anders over ga loopen
+    result_handle = NCBIWWW.qblast("blastx", "nr", sequentie,
+                                   matrix_name="BLOSUM62",
+                                   hitlist_size=10) \
+        # Dit leest het in
+    blast_record = NCBIXML.read(result_handle)
+    print(blast_record)
+    for alignment in blast_record.alignments:
+        for hsp in alignment.hsps:
+            # De resterende lijsten worden gevuld
+            descriptionlist_blastx.append(alignment.title)
+            score_list.append(hsp.score)
+            query_cover_list.append(hsp.align_length / len(sequentie) * 100)
+
+    if not header in dictionary:  # Ik vul de dict met de gemaakte lijsten
+        dictionary[header] = scientific_name_list_blastx, \
+                             descriptionlist_blastx, accession_code_list, \
+                             query_cover_list, e_value_list, pid_list
+    print(dictionary)
+    # Dit brengt de dict naar een bestand.
+    pickle.dump(dictionary, open('blast', 'wb'))
+
+
+main()
