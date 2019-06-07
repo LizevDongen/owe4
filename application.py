@@ -160,7 +160,7 @@ def top_3_hoogste_scores():
             autopct=autopct,
             shadow=True, startangle=90)
 
-    plt.title('De hoogste E-values en Percentage Identities')
+    plt.title('De laagste E-values en hoogste Percentage Identities')
     ax1.axis('equal')
 
     plt.tight_layout()
