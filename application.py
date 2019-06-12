@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 app = Flask(__name__)
 
 
-@app.route('/connectie', methods=['get', 'post'])
+@app.route('/', methods=['get', 'post'])
 def connectie():
     """
     maakt connectie met de database en run de app
