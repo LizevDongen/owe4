@@ -24,7 +24,7 @@ def connectie():
     output: applicatie met resultaten uit de database
     """
 
-    return render_template('Lize.html') #roept html pagina aan
+    return render_template('Home.html') #roept html pagina aan
 
 
 def database_optie1():
