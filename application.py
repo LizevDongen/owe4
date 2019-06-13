@@ -2,6 +2,7 @@
 # Functie: Het visualiseren van een MySQL database via verschillende 
 # functies en HTML5 pagina's, waardoor er een werkende webapplicatie onstaat
 # Datum: 13-06-2019
+# Versie 1.2
 
 
 from flask import Flask, request, render_template
