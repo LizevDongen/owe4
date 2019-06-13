@@ -260,6 +260,8 @@ def blast_opslaan_database():
     except mysql.connector.errors.IntegrityError:
         return 1
 
+    except mysql.connector.errors.DataError:
+        return 2
 
 
 @app.route('/blastresultaten', methods=['get', 'post'])
@@ -322,10 +324,20 @@ def blastresultaten():
 def opslaan_database():
     if request.form['checked'] == 'opslaan':
         onderzoeks_sequentie.append(request.form['Header'])
-        blast_opslaan_database()
-        return render_template('BLAST_resultaten_zonder_opslaan.html') + \
-               '<article class="card"> <header> <h3>De resultaten zijn ' \
-               'succesvol opgeslagen!</h3> </header> </article> '
+        x = blast_opslaan_database()
+        if x == 0:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                   '<article class="card"> <header> <h3>De resultaten zijn ' \
+                   'succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 1:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+            '<article class="card"> <header> <h3>Deze accessiecode is al ' \
+            'succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 2:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+            '<article class="card"> <header> <h3>Deze resultaten zijn te ' \
+            'onvolledig om op te slaan in de database!</h3> ' \
+            '</header> </article> '
     else:
         return render_template('BLAST_resultaten_zonder_opslaan.html') + \
                '<article class="card"> <header> <h3>Dan niet! bedankt voor ' \
