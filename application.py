@@ -1,6 +1,7 @@
 # Namen: Robert Rijksen, Lize van Dongen en Annemieke Schönthaler
-# Functie: ............
-# Datum: .............
+# Functie: Het visualiseren van een MySQL database via verschillende 
+# functies en HTML5 pagina's, waardoor er een werkende webapplicatie onstaat
+# Datum: 13-06-2019
 
 
 from flask import Flask, request, render_template
@@ -56,6 +57,8 @@ def database_optie1():
             join Onderzoeks_sequenties on 
             (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
             order by E_value Asc;""".format(categorie, woord))
+        # Als er iets ingevuld is bij het zoekwoord of bij de catergorie wordt 
+        # er een query uitgevoerd wat de kolommen ophaald.
     else:
         cursor.execute(
         """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
@@ -65,6 +68,8 @@ def database_optie1():
             (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
             where {} like '%{}%'order by E_value Asc;""".format(categorie,
                                                                 woord))
+        # Als er niets ingevuld is bij het zoekwoord of bij de catergorie wordt 
+        # er een query uitgevoerd wat de kolommen ophaald.
     rows = cursor.fetchall()
     for x in rows:
         if x != None:
@@ -74,10 +79,15 @@ def database_optie1():
                     lijst_x[n] = '<div class ="tooltip" > {} '.format(x[0]) \
                                  + '<span class ="tooltiptext" > Dit is header: <br>{} </span> </div>'.format(
                         x[8])
+                    # Het Sequentie_ID wordt hier vervangen een hover-over tekstvakje, dit zorgt ervoor
+                    # dat als je met de muis over de Sequentie_ID gaat, je de header te zien krijgt die 
+                    # bij dit Sequentie_ID hoort. 
                     lijst_x[n].strip('\'')
                 elif i == x[3]:
                     lijst_x[n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
+                    # De accessie code wordt vervangen door een link naar de website van NCBI + nogmaals 
+                    # De accessie code omdat deze anders niet meer zichtbaar is
             del lijst_x[7]
             del lijst_x[7]
     return tabulate(alle_resultaten, tablefmt='html')
