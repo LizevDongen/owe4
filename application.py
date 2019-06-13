@@ -372,9 +372,9 @@ def Blast_overig(blast, sequentie):
     :return:
     """
     result_blast = ''
-    result_handle = NCBIWWW.qblast(blast, "nr", sequentie,
+    result_handle = NCBIWWW.qblast("{}", "nr", sequentie,
                                    matrix_name="BLOSUM62",
-                                   hitlist_size=1)
+                                   hitlist_size=1).format(blast)
     blast_record = NCBIXML.read(result_handle)
     for alignment in blast_record.alignments:
         for hsp in alignment.hsps:
