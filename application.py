@@ -310,6 +310,11 @@ def blastresultaten():
                                                'waarschijnlijk geen ' \
                                                'geldige sequentie voor deze ' \
                                                'blast, probeer opnieuw!</b>'
+    except IndexError:
+        return render_template('blast.html') + '&emsp;<b><br> Dit is ' \
+                                               'waarschijnlijk geen ' \
+                                               'geldige sequentie voor deze ' \
+                                               'blast, probeer opnieuw!</b>'
 
 
 @app.route('/opslaan_database', methods=['get', 'post'])
