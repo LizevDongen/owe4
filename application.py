@@ -7,29 +7,34 @@
 
 from flask import Flask, request, render_template
 import mysql.connector
+from Bio.Seq import Seq, transcribe, translate, back_transcribe
 from Bio.Blast import NCBIXML, NCBIWWW
 import re
 from tabulate import tabulate
 import matplotlib.pyplot as plt
+
+
 
 app = Flask(__name__)
 
 
 @app.route('/', methods=['get', 'post'])
 def connectie():
-    """Deze functie runt de app
+    """
+    maakt connectie met de database en run de app
     input: zoekwoord en categorie
     output: applicatie met resultaten uit de database
     """
 
-    return render_template('Home.html')  # roept home html pagina aan
+    return render_template('Home.html') #roept html pagina aan
 
 
 def database_optie1():
-    """Deze functie haalt met een query alle resultaten op uit de zelf gekozen
-    column om vervolgens de accessiecode doormiddel van een for loop te
+    """
+    Deze functie haalt met een query alle resultaten op uit de zelf gekozen
+    column om vervolgens de accessiecode doormiddel van een forloop te 
     veranderen in een hyperlink naar de NCBI website
-    :return: de resultaten uit de mysql database, hierbij is de module
+    :return: de resultaten uit de mysql database, hierbij is de module 
     tabulate gebruikt
     """
     alle_resultaten = [['<b>Sequentie ID</b>', '<b>Naam organisme</b>',
@@ -38,36 +43,34 @@ def database_optie1():
                         '<b>Percentage identity</b>']]
     woord = request.form.get('woord')
     categorie = request.form.get('categorie')
-    # Connectie is constant opnieuw aangeroepen omdat de
+    # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     if len(woord) + len(categorie) == 0:
         cursor.execute(
-            """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-                Omschrijving_eiwit, Accessie_code, Query_cover_resultaat,\
-                 E_value, 
-                Percentage_Identity, Taxonomie_Tax_ID, Header 
-                from Resultaten_Blast 
-                join Onderzoeks_sequenties on 
-                (Resultaten_Blast.Sequentie_ID=\
-                Onderzoeks_sequenties.Sequentie_ID)
-                order by E_value Asc;""".format(categorie, woord))
+        """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
+            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
+            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
+            join Onderzoeks_sequenties on 
+            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
+            order by E_value Asc;""".format(categorie, woord))
+        # Als er iets ingevuld is bij het zoekwoord of bij de catergorie wordt 
+        # er een query uitgevoerd wat de kolommen ophaald.
     else:
         cursor.execute(
-            """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-                Omschrijving_eiwit, Accessie_code, Query_cover_resultaat\
-                , E_value, 
-                Percentage_Identity, Taxonomie_Tax_ID, Header from \
-                Resultaten_Blast 
-                join Onderzoeks_sequenties on 
-                (Resultaten_Blast.Sequentie_ID=\
-                Onderzoeks_sequenties.Sequentie_ID)
-                where {} like '%{}%'order by E_value Asc;""".format(categorie,
-                                                                    woord))
+        """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
+            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
+            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
+            join Onderzoeks_sequenties on 
+            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
+            where {} like '%{}%'order by E_value Asc;""".format(categorie,
+                                                                woord))
+        # Als er niets ingevuld is bij het zoekwoord of bij de catergorie wordt 
+        # er een query uitgevoerd wat de kolommen ophaald.
     rows = cursor.fetchall()
     for x in rows:
         if x != None:
@@ -75,16 +78,17 @@ def database_optie1():
             for n, i in enumerate(lijst_x):
                 if i == x[0]:
                     lijst_x[n] = '<div class ="tooltip" > {} '.format(x[0]) \
-                                 + '<span class ="tooltiptext" > \
-                                 Dit is header: <br>{} </span> </div>'.format(
+                                 + '<span class ="tooltiptext" > Dit is header: <br>{} </span> </div>'.format(
                         x[8])
+                    # Het Sequentie_ID wordt hier vervangen een hover-over tekstvakje, dit zorgt ervoor
+                    # dat als je met de muis over de Sequentie_ID gaat, je de header te zien krijgt die 
+                    # bij dit Sequentie_ID hoort. 
                     lijst_x[n].strip('\'')
                 elif i == x[3]:
-                    lijst_x[
-                        n] = '<a href="https://www.ncbi.nlm.nih\
-                        .gov/protein/{}"</a>'.format(
-                        x[3]) + x[3]
+                    lijst_x[n] = '<a href="https://www.ncbi.nlm.nih.gov/protein/{}"</a>'.format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
+                    # De accessie code wordt vervangen door een link naar de website van NCBI + nogmaals 
+                    # De accessie code omdat deze anders niet meer zichtbaar is
             del lijst_x[7]
             del lijst_x[7]
     return tabulate(alle_resultaten, tablefmt='html')
@@ -92,15 +96,19 @@ def database_optie1():
 
 @app.route('/database')
 def database():
-    """Dit roept de HTML pagina van database aan als /database in wordt gegeven
-    :return:
-    """
-    return render_template('database.html')  # Dit is de database HTML pagina
+    return render_template('database.html')
+
+
+@app.route('/resultaat', methods=['get', 'post'])
+def resultaat_database():
+    resultaat = database_optie1()
+    return render_template('database.html') + resultaat
+
 
 
 @app.route('/grafieken')
 def grafieken():
-    """Deze functie maakt grafieken en plaatst ze in de template.
+    """Deze functie haalt de grafieken op en plaatst ze in de template.
     :return: de HTML pagina
     """
     top_3_organismen_grafiek()
@@ -113,17 +121,15 @@ def top_3_organismen_grafiek():
     maakt hier een grafiek van die het opslaat in static.
     :return: de grafiekgrafiek
     """
-    # Connectie is constant opnieuw aangeroepen omdat de
+    # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
-    cursor = conn.cursor()
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
+    cursor = conn.cursor()    
     cursor.execute(
-        'SELECT Naam_organisme, count(*) FROM Resultaten_Blast '
-        'WHERE Naam_organisme <> "" GROUP BY Naam_organisme '
-        'ORDER BY count(*) DESC LIMIT 3;')
+        'SELECT Naam_organisme, count(*) FROM Resultaten_Blast WHERE Naam_organisme <> "" GROUP BY Naam_organisme ORDER BY count(*) DESC LIMIT 3;')
     rows = cursor.fetchall()
     organisme = []
     aantal_organisme = []
@@ -140,17 +146,15 @@ def top_3_organismen_grafiek():
 
 
 def top_3_hoogste_scores():
-    # Connectie is constant opnieuw aangeroepen omdat de
+    # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute(
-        'select Naam_organisme, E_value, Percentage_Identity '
-        'from Resultaten_Blast order by E_value, Percentage_Identity desc '
-        'limit 10')
+        'select Naam_organisme, E_value, Percentage_Identity from Resultaten_Blast order by E_value, Percentage_Identity desc limit 10')
     rows = cursor.fetchall()
     organisme = []
     aantal_organisme = []
@@ -172,28 +176,21 @@ def top_3_hoogste_scores():
 
     plt.tight_layout()
     plt.savefig('static/top_5_Evalue.png')
-
-
+        
 @app.route('/blast')
 def blast():
-    """Deze functie haalt de template van
-    :return:
-    """
     return render_template('blast.html')
 
-
 def sequentie_id_ophaler():
-    """ Deze functie haalt het hoogste sequentie ID op om deze vervolgens
-    door te geven,
-    zodat als er een resultaat wordt toegevoegd aan de database, deze een
-    nieuw uniek nummer krijgt
+    """ Deze functie haalt het hoogste sequentie ID op om deze vervolgens door te geven,
+    zodat als er een resultaat wordt toegevoegd aan de database, deze een nieuw uniek nummer krijgt
     """
-    # Connectie is constant opnieuw aangeroepen omdat de
+    # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
-        host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
-        user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
-        db="rohtv", password='pwd123')
+           host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
+           user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
+           db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute('select max(Sequentie_ID) from Onderzoeks_sequenties;')
     rows = cursor.fetchone()
@@ -201,20 +198,17 @@ def sequentie_id_ophaler():
         return x
 
 
-def blastx():
-    """
-    Deze functie BLASTx, blast met het programma blastx. Het heeft 2 global
-     lijsten om
-    vervolgens deze te vullen met de resultaten van de blast. De lijsten zijn
-     global omdat deze
-    doorgegeven kunnen worden zonder de hele functie (met daarbij het blasten)
-     opnieuw uit te voeren
+def BLASTx():
+    """ 
+    Deze functie BLASTx, blast met het programma blastx. Het heeft 2 global lijsten om
+    vervolgens deze te vullen met de resultaten van de blast. De lijsten zijn global omdat deze
+    doorgegeven kunnen worden zonder de hele functie (met daarbij het blasten) opnieuw uit te voeren
     """
     global onderzoeks_sequentie
     global resultaten_blasten
     onderzoeks_sequentie = []
     resultaten_blasten = []
-    seqid = sequentie_id_ophaler()
+    seqID = sequentie_id_ophaler()
     sequentie = request.form.get("Sequentie")
     blastx = NCBIWWW.qblast(program='blastx', database='nr',
                             sequence=str(sequentie), format_type='XML',
@@ -223,10 +217,9 @@ def blastx():
         if record.alignments:
             for align in record.alignments:
                 for hsp in align.hsps:
-                    resultaten_blasten.append(seqid + 1)
+                    resultaten_blasten.append(seqID+1)
                     resultaten_blasten.append(re.search("([A-Z][a-z]*) "
-                                                        "([a-z]+)",
-                                                        align.title)
+                                                        "([a-z]+)",align.title)
                                               .group())
                     resultaten_blasten.append(align.title)
                     resultaten_blasten.append(re.search('\|[A-Z]+.*?[0-9]\|',
@@ -237,15 +230,15 @@ def blastx():
                     resultaten_blasten.append(hsp.expect)
                     resultaten_blasten.append(((hsp.identities /
                                                 hsp.align_length) * 100))
-                    onderzoeks_sequentie.append(seqid + 1)
+                    onderzoeks_sequentie.append(seqID+1)
                     onderzoeks_sequentie.append(sequentie)
 
 
 def blast_opslaan_database():
-    """"
+    """" 
     Deze functie pakt de global lijsten en vult insert deze in de database
     """
-    # Connectie is constant opnieuw aangeroepen omdat de
+    # Connectie is constant opnieuw aangeroepen omdat de 
     # connectie met de database anders verbroken was.
     try:
         conn = mysql.connector.connect(
@@ -255,20 +248,20 @@ def blast_opslaan_database():
             db="rohtv", password='pwd123')
         cursor = conn.cursor()
         cursor.execute(
-            'insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, '
-            'Header) values {};'.format(
+            'insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, Header) values {};'.format(
                 tuple(onderzoeks_sequentie)))
         conn.commit()
         cursor.execute(
-            'insert into Resultaten_Blast(Sequentie_ID, Naam_organisme,'
-            ' Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, '
-            'E_value, Percentage_Identity) values {};'.format(
+            'insert into Resultaten_Blast(Sequentie_ID, Naam_organisme, Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, Percentage_Identity) values {};'.format(
                 tuple(resultaten_blasten)))
         conn.commit()
         return 0
 
     except mysql.connector.errors.IntegrityError:
         return 1
+
+    except mysql.connector.errors.DataError:
+        return 2
 
 
 @app.route('/blastresultaten', methods=['get', 'post'])
@@ -285,12 +278,12 @@ def blastresultaten():
         x = is_dna(seq)
         if x != "Fout":
             if request.form['BLAST'] == 'BLASTn':
-                resultaten_blastn = blast_overig('blastn', seq)
+                resultaten_blastn = Blast_overig('blastn', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_blastn
             elif request.form['BLAST'] == 'BLASTx':
-                blastx()
+                BLASTx()
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     '<hr>' + '<b>Resultaten BLASTx </b> <br>' + '<br>' + \
@@ -302,12 +295,12 @@ def blastresultaten():
                     str(resultaten_blasten[6]) + '<br>' + \
                     render_template('opslaan_database_knoppen.html')
             elif request.form['BLAST'] == 'BLASTp':
-                resultaten_blastp = blast_overig('blastp', seq)
+                resultaten_blastp = Blast_overig('blastp', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_blastp
             elif request.form['BLAST'] == 'tBLASTx':
-                resultaten_tblastx = blast_overig('tblastx', seq)
+                resultaten_tblastx = Blast_overig('tblastx', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_tblastx
@@ -320,16 +313,31 @@ def blastresultaten():
                                                'waarschijnlijk geen ' \
                                                'geldige sequentie voor deze ' \
                                                'blast, probeer opnieuw!</b>'
+    except IndexError:
+        return render_template('blast.html') + '&emsp;<b><br> Dit is ' \
+                                               'waarschijnlijk geen ' \
+                                               'geldige sequentie voor deze ' \
+                                               'blast, probeer opnieuw!</b>'
 
 
 @app.route('/opslaan_database', methods=['get', 'post'])
 def opslaan_database():
     if request.form['checked'] == 'opslaan':
         onderzoeks_sequentie.append(request.form['Header'])
-        blast_opslaan_database()
-        return render_template('BLAST_resultaten_zonder_opslaan.html') + \
-               '<article class="card"> <header> <h3>De resultaten zijn ' \
-               'succesvol opgeslagen!</h3> </header> </article> '
+        x = blast_opslaan_database()
+        if x == 0:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                   '<article class="card"> <header> <h3>De resultaten zijn ' \
+                   'succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 1:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+            '<article class="card"> <header> <h3>Deze accessiecode is al ' \
+            'succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 2:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+            '<article class="card"> <header> <h3>Deze resultaten zijn te ' \
+            'onvolledig om op te slaan in de database!</h3> ' \
+            '</header> </article> '
     else:
         return render_template('BLAST_resultaten_zonder_opslaan.html') + \
                '<article class="card"> <header> <h3>Dan niet! bedankt voor ' \
@@ -356,18 +364,17 @@ def is_dna(sequentie):
         return "Fout"
 
 
-def blast_overig(blast, sequentie):
-    """Dit is BLAST_overig. Het blast als gewoonlijk met als score matrix
-    BLOSUM62
+def Blast_overig(blast, sequentie):
+    """Dit is BLAST_overig. Het blast als gewoonlijk met als score matrix BLOSUM62
     en als database nr.
-    :param sequentie: de sequentie die gegeven is
+    :param sequentie: de sequentie die gegeven is 
     :param blast: het blast programma wat meegegeven is
     :return:
     """
     result_blast = ''
-    result_handle = NCBIWWW.qblast(blast, "nr", sequentie,
+    result_handle = NCBIWWW.qblast("{}", "nr", sequentie,
                                    matrix_name="BLOSUM62",
-                                   hitlist_size=1)
+                                   hitlist_size=1).format(blast)
     blast_record = NCBIXML.read(result_handle)
     for alignment in blast_record.alignments:
         for hsp in alignment.hsps:
@@ -382,11 +389,11 @@ def blast_overig(blast, sequentie):
                              + '<br>')
             result_blast += ("E-value: " + str(hsp.expect) + '<br>')
             result_blast += ('Query cover: ' + str((hsp.align_length /
-                                                    len(sequentie))
-                                                   * 100) + '<br>')
+                                                          len(sequentie))
+                                                          * 100) + '<br>')
             result_blast += ('Identity: ' + str((hsp.identities /
-                                                 hsp.align_length)
-                                                * 100) + '<br>')
+                                                        hsp.align_length)
+                                                       * 100) + '<br>')
 
     return result_blast
 
