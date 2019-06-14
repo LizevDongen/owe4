@@ -37,52 +37,43 @@ def database_optie1():
                         '<b>Percentage identity</b>']]
     woord = request.form.get('woord')
     categorie = request.form.get('categorie')
-    # Connectie is constant opnieuw aangeroepen omdat de
-    # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
         host="hannl-hlo-bioinformatica-mysqlsrv.mysql.database.azure.com",
         user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
         db="rohtv", password='pwd123')
     cursor = conn.cursor()
     if len(woord) + len(categorie) == 0:
-        cursor.execute(
-            """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-                Omschrijving_eiwit, Accessie_code, Query_cover_resultaat,\
-                 E_value, 
-                Percentage_Identity, Taxonomie_Tax_ID, Header 
-                from Resultaten_Blast 
-                join Onderzoeks_sequenties on 
-                (Resultaten_Blast.Sequentie_ID=\
-                Onderzoeks_sequenties.Sequentie_ID)
-                order by E_value Asc;""".format(categorie, woord)) #query als er geen zoek woord/categorie is
+        cursor.execute("""select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
+            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
+            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
+            join Onderzoeks_sequenties on 
+            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
+            order by E_value Asc;""")
     else:
-        cursor.execute(
-            """select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
-                Omschrijving_eiwit, Accessie_code, Query_cover_resultaat\
-                , E_value, 
-                Percentage_Identity, Taxonomie_Tax_ID, Header from \
-                Resultaten_Blast 
-                join Onderzoeks_sequenties on 
-                (Resultaten_Blast.Sequentie_ID=\
-                Onderzoeks_sequenties.Sequentie_ID)
-                where {} like '%{}%'order by E_value Asc;""".format(categorie, woord))  #query waar zoekwoord en
-                                                                                        #categorie in worden gezet
+        cursor.execute("""select Resultaten_Blast.Sequentie_ID, Naam_organisme, 
+            Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, E_value, 
+            Percentage_Identity, Taxonomie_Tax_ID, Header from Resultaten_Blast 
+            join Onderzoeks_sequenties on 
+            (Resultaten_Blast.Sequentie_ID=Onderzoeks_sequenties.Sequentie_ID)
+            where {} like '%{}%'order by E_value Asc;""".format(categorie,
+                                                                woord))
+
     rows = cursor.fetchall()
-    for x in rows:  #***
-        if x != None:
+    for x in rows:
+        print(x)
+        if x is not None:
             lijst_x = list(x)
             for n, i in enumerate(lijst_x):
                 if i == x[0]:
                     lijst_x[n] = '<div class ="tooltip" > {} '.format(x[0]) \
-                                 + '<span class ="tooltiptext" > \
-                                 Dit is header: <br>{} </span> </div>'.format(
+                                 + '<span class ="tooltiptext" > Dit is ' \
+                                   'header: <br>{} </span> </div>'.format(
                         x[8])
                     lijst_x[n].strip('\'')
                 elif i == x[3]:
-                    lijst_x[
-                        n] = '<a href="https://www.ncbi.nlm.nih\
-                        .gov/protein/{}"</a>'.format(
-                        x[3]) + x[3]
+                    lijst_x[n] = '<a href="https://' \
+                                 'www.ncbi.nlm.nih.gov/protein/{}"</a>'\
+                                     .format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
             del lijst_x[7]
             del lijst_x[7]
@@ -97,14 +88,20 @@ def database():
     return render_template('database.html')  # Dit is de database HTML pagina
 
 
+@app.route('/resultaat', methods=['get', 'post'])
+def resultaat_database():
+    resultaat = database_optie1()
+    return render_template('database.html') + resultaat
+
+
 @app.route('/grafieken')
 def grafieken():
     """Deze functie maakt grafieken en plaatst ze in de template.
     :return: de HTML pagina
     """
-    top_3_organismen_grafiek() #functie die grafiek aanmaakt over de database
-    top_3_hoogste_scores() #functie die grafiek aanmaakt over de database
-    return render_template('grafieken.html') # Dit is de grafieken HTML pagina
+    top_3_organismen_grafiek()  # Functie die grafiek aanmaakt over de database
+    top_3_hoogste_scores()  # Functie die grafiek aanmaakt over de database
+    return render_template('grafieken.html')  # Dit is de grafieken HTML pagina
 
 
 def top_3_organismen_grafiek():
@@ -120,9 +117,10 @@ def top_3_organismen_grafiek():
         db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute(
-        'SELECT Naam_organisme, count(*) FROM Resultaten_Blast '
-        'WHERE Naam_organisme <> "" GROUP BY Naam_organisme '
-        'ORDER BY count(*) DESC LIMIT 3;') #query die de 3 meest voorkomende organisme zoekt
+        """SELECT Naam_organisme, count(*) FROM Resultaten_Blast 
+           WHERE Naam_organisme <> "" GROUP BY Naam_organisme 
+           ORDER BY count(*) DESC LIMIT 3;""")
+    # Query die de 3 meest voorkomende organisme zoekt
     rows = cursor.fetchall()
     organisme = []
     aantal_organisme = []
@@ -130,7 +128,8 @@ def top_3_organismen_grafiek():
         organisme.append(x[0])
         aantal_organisme.append(x[1])
     width = 0.5
-    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue')) # maken grafiek
+    plt.bar(organisme, aantal_organisme, width, color=('g', 'r', 'blue'))
+    # Maken van de grafiek
     plt.title('De meest voorkomende organismen')
     plt.xlabel('Organisme')
     plt.ylabel('Aantal organisme')
@@ -147,9 +146,10 @@ def top_3_hoogste_scores():
         db="rohtv", password='pwd123')
     cursor = conn.cursor()
     cursor.execute(
-        'select Naam_organisme, E_value, Percentage_Identity '
-        'from Resultaten_Blast order by E_value, Percentage_Identity desc '
-        'limit 10') # query die de laagste E-value vind en hoogste Percentage idenity
+        """select Naam_organisme, E_value, Percentage_Identity 
+           from Resultaten_Blast order by E_value, Percentage_Identity desc 
+           limit 10""")
+    # Query die de laagste E-value vind en hoogste Percentage idenity
     rows = cursor.fetchall()
     organisme = []
     aantal_organisme = []
@@ -159,7 +159,7 @@ def top_3_hoogste_scores():
     explode = (0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     fig1, ax1 = plt.subplots()
     tot = sum(aantal_organisme) / 100.0
-    autopct = lambda x: "%d" % round(x * tot) # maken grafiek
+    autopct = lambda x: "%d" % round(x * tot)  # maken grafiek
     plt.rc('xtick', labelsize=7)
 
     ax1.pie(aantal_organisme, explode=explode, labels=organisme,
@@ -195,7 +195,8 @@ def sequentie_id_ophaler():
         user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
         db="rohtv", password='pwd123')
     cursor = conn.cursor()
-    cursor.execute('select max(Sequentie_ID) from Onderzoeks_sequenties;') # query die max sequenties ID zoekt
+    cursor.execute('select max(Sequentie_ID) from Onderzoeks_sequenties;')
+    # query die max sequenties ID zoekt
     rows = cursor.fetchone()
     for x in rows:
         return x
@@ -213,14 +214,20 @@ def blastx():
     """
     global onderzoeks_sequentie
     global resultaten_blasten
+    # Om ervoor te zorgen dat je constant bij de resultaten van de BLAST kon,
+    # kon ik niet anders (denk ik) dan de lijsten global te maken.
+    # Sorry Teuntje
     onderzoeks_sequentie = []
     resultaten_blasten = []
     seqid = sequentie_id_ophaler()
     sequentie = request.form.get("Sequentie")
-    blastx = NCBIWWW.qblast(program='blastx', database='nr', # instellingen BLAST
-                            sequence=str(sequentie), format_type='XML',
-                            hitlist_size=1)
-    for record in NCBIXML.parse(blastx): # ***
+    # instellingen BLAST
+    blastx_type = NCBIWWW.qblast(program='blastx', database='nr',
+                                 sequence=str(sequentie), format_type='XML',
+                                 hitlist_size=1)
+    # Hieronder worden de resultaten opgeslagen in de globale lijsten om deze
+    # later te kunnen inserten in de database
+    for record in NCBIXML.parse(blastx_type):
         if record.alignments:
             for align in record.alignments:
                 for hsp in align.hsps:
@@ -230,7 +237,7 @@ def blastx():
                                                         align.title)
                                               .group())
                     resultaten_blasten.append(align.title)
-                    resultaten_blasten.append(re.search('\|[A-Z]+.*?[0-9]\|',
+                    resultaten_blasten.append(re.search(r'\|[A-Z]+.*?[0-9]\|',
                                                         align.title).group()
                                               .replace('|', ''))
                     resultaten_blasten.append(((hsp.align_length /
@@ -243,9 +250,7 @@ def blastx():
 
 
 def blast_opslaan_database():
-    """"
-    Deze functie pakt de global lijsten en vult insert deze in de database
-    :return: toevoeging aan database
+    """" Deze functie Slaat alles op de database
     """
     # Connectie is constant opnieuw aangeroepen omdat de
     # connectie met de database anders verbroken was.
@@ -256,21 +261,28 @@ def blast_opslaan_database():
             user="rohtv@hannl-hlo-bioinformatica-mysqlsrv",
             db="rohtv", password='pwd123')
         cursor = conn.cursor()
-        cursor.execute( # ***
-            'insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, '
-            'Header) values {};'.format(
-                tuple(onderzoeks_sequentie)))
+        cursor.execute(  # Query die de sequentie opslaat in de database
+            """insert into Onderzoeks_sequenties(Sequentie_ID, Sequentie, 
+               Header) values {};""".format(tuple(onderzoeks_sequentie)))
         conn.commit()
-        cursor.execute(
-            'insert into Resultaten_Blast(Sequentie_ID, Naam_organisme,'
-            ' Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, '
-            'E_value, Percentage_Identity) values {};'.format(
+        cursor.execute(  # Query die de resulaten opslaat in de database
+            """insert into Resultaten_Blast(Sequentie_ID, Naam_organisme,
+               Omschrijving_eiwit, Accessie_code, Query_cover_resultaat, 
+               E_value, Percentage_Identity) values {};""".format(
                 tuple(resultaten_blasten)))
         conn.commit()
         return 0
 
-    except mysql.connector.errors.IntegrityError: # ***
+    except mysql.connector.errors.IntegrityError:
+        # Als er deze error verschijnt, is de sequentie niet te gebruiken bij
+        # de BLAST
         return 1
+
+    except mysql.connector.errors.DataError:
+        # Als er deze error verschijnt, is het resultaat te onvolledige bij
+        # om op te slaan in de database, of de resultaten staan als in de
+        # database
+        return 2
 
 
 @app.route('/blastresultaten', methods=['get', 'post'])
@@ -286,12 +298,12 @@ def blastresultaten():
         seq = request.form['Sequentie'].upper()
         x = is_dna(seq)
         if x != "Fout":
-            if request.form['BLAST'] == 'BLASTn': # BLAST met BLASTn
+            if request.form['BLAST'] == 'BLASTn':  # BLAST met BLASTn
                 resultaten_blastn = blast_overig('blastn', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_blastn
-            elif request.form['BLAST'] == 'BLASTx': # BLAST met BLASTx
+            elif request.form['BLAST'] == 'BLASTx':  # BLAST met BLASTx
                 blastx()
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
@@ -303,25 +315,28 @@ def blastresultaten():
                     '<br>' + 'Percentage identity: ' + \
                     str(resultaten_blasten[6]) + '<br>' + \
                     render_template('opslaan_database_knoppen.html')
-            elif request.form['BLAST'] == 'BLASTp': # BLAST met BLASTp
+            elif request.form['BLAST'] == 'BLASTp':  # BLAST met BLASTp
                 resultaten_blastp = blast_overig('blastp', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_blastp
-            elif request.form['BLAST'] == 'tBLASTx': # BLAST met tBLASTx
+            elif request.form['BLAST'] == 'tBLASTx':  # BLAST met tBLASTx
                 resultaten_tblastx = blast_overig('tblastx', seq)
                 return \
                     render_template('BLAST_resultaten_zonder_opslaan.html') + \
                     resultaten_tblastx
         else:
-            return render_template('blast.html') + \ #wanneer er een niet geldige sequentie wordt ingevoerd
+            # wanneer er een niet geldige sequentie wordt ingevoerd
+            return render_template('blast.html') + \
                    '&emsp;<b><br> Dit is geen geldige sequentie, ' \
                    'probeer opnieuw!</b>'
     except ValueError:
-        return render_template('blast.html') + '&emsp;<b><br> Dit is ' \ # ***
-                                               'waarschijnlijk geen ' \
-                                               'geldige sequentie voor deze ' \
-                                               'blast, probeer opnieuw!</b>'
+        # Wanneer men een value Error krijgt, krijgt de BLAST geen geldige
+        # sequentie door, hierdoor wordt deze error afgevangen
+        return render_template('blast.html') + '&emsp;<b><br> Dit is ' \
+                                               'waarschijnlijk geen geldige ' \
+                                               'sequentie voor deze blast, ' \
+                                               'probeer opnieuw!</b>'
 
 
 @app.route('/opslaan_database', methods=['get', 'post'])
@@ -330,13 +345,34 @@ def opslaan_database():
     :return: resultaten opgeslagen in de database
     """
     if request.form['checked'] == 'opslaan':
-        onderzoeks_sequentie.append(request.form['Header'])
-        blast_opslaan_database() #roept functie aan
-        return render_template('BLAST_resultaten_zonder_opslaan.html') + \ #slaat resultaten op
-               '<article class="card"> <header> <h3>De resultaten zijn ' \
-               'succesvol opgeslagen!</h3> </header> </article> '
+        header = request.form['Header']
+        if len(header) != 0:
+            onderzoeks_sequentie.append(header)
+        else:
+            niks = ' '
+            onderzoeks_sequentie.append(niks)
+        blast_opslaan_database()  # Roept functie aan met de queries die de
+        # resultaten / sequenties opslaat
+        # hieronder worden het bericht gegeven dat de resultaten opgeslagen
+        # zijn
+        x = blast_opslaan_database()
+        if x == 0:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                   '<article class="card"> <header> <h3>De resultaten zijn ' \
+                   'succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 1:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                   '<article class="card"> <header> <h3>Deze accessiecode ' \
+                   'is al succesvol opgeslagen!</h3> </header> </article> '
+        elif x == 2:
+            return render_template('BLAST_resultaten_zonder_opslaan.html') + \
+                   '<article class="card"> <header> <h3>Deze resultaten zijn' \
+                   ' te onvolledig om op te slaan in de database!</h3> ' \
+                   '</header> </article> '
     else:
-        return render_template('BLAST_resultaten_zonder_opslaan.html') + \ #slaat resultaten niet op
+        # hieronder worden het bericht gegeven dat de resultaten niet
+        # opgeslagen zijn
+        return render_template('BLAST_resultaten_zonder_opslaan.html') + \
                '<article class="card"> <header> <h3>Dan niet! bedankt voor ' \
                'het gebruikmaken van ons programma!</h3> </header> </article> '
 
@@ -348,39 +384,44 @@ def is_dna(sequentie):
     :return: een string met het type van de sequentie
     """
     sequentie = sequentie.upper()
-    if len(re.findall(r"[ATCG]", sequentie)) == len(sequentie): #kijken of het DNA is
+    # kijken of het DNA is
+    if len(re.findall(r"[ATCG]", sequentie)) == len(sequentie):
         return "DNA"
-    elif len(re.findall(r"[AUCG]", sequentie)) == len(sequentie): #kijken of het RNA is
+    # kijken of het RNA is
+    elif len(re.findall(r"[AUCG]", sequentie)) == len(sequentie):
         return "RNA"
     elif len(
-            re.findall(r"[ARNDBC EQZGHILKMFPSTWYV]", # kijken of het eiwit is
-                       sequentie)) == len(
-        sequentie):
+            re.findall(r"[ARNDBC EQZGHILKMFPSTWYV]",  # kijken of het eiwit is
+                       sequentie)) == len(sequentie):
         return "eiwit"
     else:
         return "Fout"
 
 
-def blast_overig(blast, sequentie):
+def blast_overig(blast_type, sequentie):
     """Dit is BLAST_overig. Het blast als gewoonlijk met als score matrix
     BLOSUM62
     en als database nr.
     :param sequentie: de sequentie die gegeven is
-    :param blast: het blast programma wat meegegeven is
-    :return:
+    :param blast_type: het blast programma wat meegegeven is
+    :return: de string met de resultaten van de BLAST
     """
     result_blast = ''
-    result_handle = NCBIWWW.qblast(blast, "nr", sequentie, # instellingen BLAST
+    # instellingen BLAST
+    result_handle = NCBIWWW.qblast(blast_type, "nr", sequentie,
                                    matrix_name="BLOSUM62",
                                    hitlist_size=1)
     blast_record = NCBIXML.read(result_handle)
-    for alignment in blast_record.alignments: # ***
+    # Hieronder worden de BLAST resultaten opgeeslagen in een string
+    # + een HTML enter teken, zodat deze gereturned word om netjes onder elkaar
+    # op de HTML pagina zichtbaar te worden
+    for alignment in blast_record.alignments:
         for hsp in alignment.hsps:
             result_blast += "<b>****Alignment****</b> <br>"
             result_blast += ("Beschrijving: " + alignment.title
                              + '<br>')
             result_blast += ('Accessiecode: ' +
-                             (re.search('\|[A-Z]+.*?[0-9]\|',
+                             (re.search(r"\|[A-Z]+.*?[0-9]\|",
                                         alignment.title).group()
                               .replace('|', '')) + '<br>')
             result_blast += ("Length: " + str(alignment.length)
@@ -397,4 +438,4 @@ def blast_overig(blast, sequentie):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
