@@ -72,7 +72,7 @@ def database_optie1():
                     lijst_x[n].strip('\'')
                 elif i == x[3]:
                     lijst_x[n] = '<a href="https://' \
-                                 'www.ncbi.nlm.nih.gov/protein/{}"</a>'\
+                                 'www.ncbi.nlm.nih.gov/protein/{}"</a>' \
                                      .format(x[3]) + x[3]
                     alle_resultaten.append(lijst_x)
             del lijst_x[7]
@@ -100,7 +100,7 @@ def grafieken():
     :return: de HTML pagina
     """
     top_3_organismen_grafiek()  # Functie die grafiek aanmaakt over de database
-    top_3_hoogste_scores()  # Functie die grafiek aanmaakt over de database
+    top_10_hoogste_scores()  # Functie die grafiek aanmaakt over de database
     return render_template('grafieken.html')  # Dit is de grafieken HTML pagina
 
 
@@ -137,7 +137,7 @@ def top_3_organismen_grafiek():
     plt.savefig("static/top_3_organisme.png")
 
 
-def top_3_hoogste_scores():
+def top_10_hoogste_scores():
     # Connectie is constant opnieuw aangeroepen omdat de
     # connectie met de database anders verbroken was.
     conn = mysql.connector.connect(
@@ -152,17 +152,17 @@ def top_3_hoogste_scores():
     # Query die de laagste E-value vind en hoogste Percentage idenity
     rows = cursor.fetchall()
     organisme = []
-    aantal_organisme = []
+    e_value = []
     for x in rows:
         organisme.append(x[0])
-        aantal_organisme.append(x[2])
+        e_value.append(x[2])
     explode = (0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     fig1, ax1 = plt.subplots()
-    tot = sum(aantal_organisme) / 100.0
+    tot = sum(e_value) / 100.0
     autopct = lambda x: "%d" % round(x * tot)  # maken grafiek
     plt.rc('xtick', labelsize=7)
 
-    ax1.pie(aantal_organisme, explode=explode, labels=organisme,
+    ax1.pie(e_value, explode=explode, labels=organisme,
             autopct=autopct,
             shadow=True, startangle=90)
 
@@ -178,7 +178,7 @@ def blast():
     """Deze functie haalt de template van de blast pagina op
     :return: BLAST pagina
     """
-    return render_template('blast.html') # roept BLAST pagina aan
+    return render_template('blast.html')  # roept BLAST pagina aan
 
 
 def sequentie_id_ophaler():
@@ -439,3 +439,4 @@ def blast_overig(blast_type, sequentie):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
